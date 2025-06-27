@@ -13,14 +13,15 @@ class ContactFormHandler:
     def process(self, name, email, subject, message):
         self.errors = self.validate(name, email, subject, message)
         if self.errors:
+            print(self.errors)
             return {'success': False, 'errors': self.errors}
-
-        # Save to database
-        self.save_to_db(name, email, subject, message)
 
         # Send email
         email_body = self.render_email_template(name, email, subject, message)
         self.send_email(email_body)
+
+        # Save to database
+        self.save_to_db(name, email, subject, message)
 
         return {'success': True, 'message': 'Message sent successfully'}
 
