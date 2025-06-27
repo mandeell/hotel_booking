@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Contact Message - {{ hotel_name }}</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            color: #333333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a73e8 0%, #4a90e2 100%);
+            text-align: center;
+            padding: 30px 20px;
+            color: #ffffff;
+        }
+        .header img {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 15px;
+        }
+        .header h1 {
+            font-size: 24px;
+            margin: 0;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px;
+        }
+        .content h2 {
+            font-size: 20px;
+            color: #1a73e8;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .content p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin: 10px 0;
+            color: #444444;
+        }
+        .content .label {
+            font-weight: 600;
+            color: #222222;
+        }
+        .footer {
+            background-color: #f1f3f5;
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+            color: #666666;
+            border-top: 1px solid #e0e0e0;
+        }
+        .footer a {
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #1a73e8;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 16px;
+            margin: 20px 0;
+            display: block;
+            text-align: center;
+            max-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{ hotel_logo }}" alt="{{ hotel_name }} Logo">
+            <h1>New Contact Message</h1>
+        </div>
+        <div class="content">
+            <h2>From {{ name }}</h2>
+            <p><span class="label">Email:</span> {{ email }}</p>
+            <p><span class="label">Subject:</span> {{ subject }}</p>
+            <p><span class="label">Message:</span></p>
+            <p>{{ message }}</p>
+            <a href="mailto:{{ email }}" class="button">Reply to Sender</a>
+        </div>
+        <div class="footer">
+            <p><strong>{{ hotel_name }}</strong></p>
+            <p>{{ hotel_address }}</p>
+            <p>
+                <a href="mailto:{{ hotel_contact_email }}">{{ hotel_contact_email }}</a> |
+                <a href="tel:{{ hotel_contact_phone }}">{{ hotel_contact_phone }}</a>
+            </p>
+            <p>&copy; {% now "Y" %} {{ hotel_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
