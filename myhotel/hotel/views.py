@@ -18,7 +18,7 @@ def home(request):
     if request.method == 'POST' and 'form1_submit' in request.POST:
         checkin_str = request.POST.get('checkin')
         checkout_str = request.POST.get('checkout')
-        requested_rooms = request.POST.get('room')
+        requested_rooms = request.POST.get('rooms')  # Changed from 'room' to 'rooms'
         room_type_id = request.POST.get('room_type')
         guest = request.POST.get('guest')
 
@@ -31,17 +31,20 @@ def check_availability_ajax(request):
     if request.method == 'POST':
         checkin_str = request.POST.get('checkin')
         checkout_str = request.POST.get('checkout')
-        requested_rooms = request.POST.get('room')
+        requested_rooms = request.POST.get('rooms')
         room_type_id = request.POST.get('room_type')
         guest = request.POST.get('guest')
 
         checker = RoomAvailabilityChecker()
         result = checker.check_availability(checkin_str, checkout_str, room_type_id, requested_rooms, guest)
 
-        # Return JSON response
         return JsonResponse({
             'availability_message': result.get('availability_message', ''),
+            'base_price': result.get('base_price', ''),
+            'total_cost': result.get('total_cost', ''),
+            'number_of_nights': result.get('number_of_nights', 0),
             'errors': result.get('errors', []),
+            'form_data': result.get('form_data', {})
         })
 
     return JsonResponse({'errors': ['Invalid request method']}, status=400)
