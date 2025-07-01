@@ -1,0 +1,39 @@
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">Confirm Your Booking</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6 id="confirmDescription">Please review your booking details:</h6>
+                <div class="table-responsive" aria-describedby="confirmDescription">
+                    <table class="table table-bordered table-striped">
+                        <tbody id="confirmationDetails">
+                            <tr><th scope="row">First Name</th><td id="confirmFirstName"></td></tr>
+                            <tr><th scope="row">Last Name</th><td id="confirmLastName"></td></tr>
+                            <tr><th scope="row">Email</th><td id="confirmEmail"></td></tr>
+                            <tr><th scope="row">Phone</th><td id="confirmPhone"></td></tr>
+                            <tr><th scope="row">Check-in Date</th><td id="confirmCheckin"></td></tr>
+                            <tr><th scope="row">Check-out Date</th><td id="confirmCheckout"></td></tr>
+                            <tr><th scope="row">Room Type</th><td id="confirmRoomType"></td></tr>
+                            <tr><th scope="row">Max. Guests</th><td id="confirmGuests"></td></tr>
+                            <tr><th scope="row">Rooms</th><td id="confirmRooms"></td></tr>
+                            <tr><th scope="row">Price Per Room</th><td id="confirmBasePrice"></td></tr>
+                            <tr><th scope="row">Total Cost</th><td id="confirmTotalCost"></td></tr>
+                            <tr><th scope="row">Special Requests</th><td id="confirmSpecialRequests"></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="confirmationFeedback" class="mt-3" aria-live="polite"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="backToBooking">Back to Booking</button>
+                <button type="button" class="btn btn-primary" id="confirmBooking">Confirm Booking</button>
+            </div>
+        </div>
+    </div>
+</div>
+ <script>
+      window.PAYSTACK_PUBLIC_KEY = "{{ settings.PAYSTACK_PUBLIC_KEY }}";
+    </script>
