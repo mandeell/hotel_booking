@@ -14,7 +14,9 @@ SECRET_KEY = 'django-insecure-a!yo*(aax35pqi_cli!rfveytw(dj9sy)u)tss6g=b&u2v9j0v
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.pythonanywhere.com']
+# ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.pythonanywhere.com']
+ALLOWED_HOSTS = ['8c95-102-90-101-24.ngrok-free.app', '127.0.0.1']
+CSRF_TRUSTED_ORIGINS = ['https://8c95-102-90-101-24.ngrok-free.app']
 
 
 # Application definition
@@ -101,6 +103,27 @@ USE_I18N = True
 USE_TZ = True
 
 SITE_URL = 'http://127.0.0.1:8000'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'hotel.booking': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
+
+PAYSTACK_SECRET_KEY = 'sk_test_fff4bc346a549bdf0c77bc8f45e21dd7e7b6c765'
+FLUTTERWAVE_PUBLIC_KEY = 'FLWPUBK_TEST-fe7aa1fba2c31ff3310155178b31350f-X'
+
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
