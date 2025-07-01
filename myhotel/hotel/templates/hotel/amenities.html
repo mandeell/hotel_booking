@@ -1,0 +1,22 @@
+{% load static %}
+<section id="amenities" class="amenities-section py-5 bg-light">
+  <div class="container">
+    <div class="section-header text-center mb-5">
+      <h2 class="section-title">Hotel Amenities</h2>
+      <p class="section-subtitle">Enjoy world-class facilities and services</p>
+    </div>
+    <div class="row">
+      {% for hotel_amenity in hotel_amenities %}
+        <div class="col-lg-3 col-md-6 mb-4">
+          <div class="amenity-card text-center">
+            <div class="amenity-icon">
+              <i class="fas fa-{{ hotel_amenity.icon_name }}"></i>
+            </div>
+            <h5>{{ hotel_amenity.name }}</h5>
+            <p>{{ hotel_amenity.description }}</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
