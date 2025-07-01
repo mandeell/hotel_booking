@@ -1,0 +1,32 @@
+<div class="modal fade" id="paymentResultModal" tabindex="-1" aria-labelledby="paymentResultModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentResultModalLabel">Payment Result</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="paymentResultFeedback"></div>
+                <div id="bookingDetails" style="display: none;">
+                    <h6>Booking Details</h6>
+                    <p><strong>Booking ID:</strong> <span id="resultBookingId"></span></p>
+                    <p><strong>Guest Name:</strong> <span id="resultGuestName"></span></p>
+                    <p><strong>Email:</strong> <span id="resultEmail"></span></p>
+                    <p><strong>Phone:</strong> <span id="resultPhone"></span></p>
+                    <p><strong>Check-in:</strong> <span id="resultCheckin"></span></p>
+                    <p><strong>Check-out:</strong> <span id="resultCheckout"></span></p>
+                    <p><strong>Room Type:</strong> <span id="resultRoomType"></span></p>
+                    <p><strong>Guests:</strong> <span id="resultGuests"></span></p>
+                    <p><strong>Rooms:</strong> <span id="resultRooms"></span></p>
+                    <p><strong>Total Cost:</strong> <span id="resultTotalCost"></span></p>
+                    <p><strong>Transaction ID:</strong> <span id="resultTransactionId"></span></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="retryBookingBtn" class="btn btn-primary" style="display: none;">Retry Booking</button>
+                <button type="button" id="printReceiptBtn" class="btn btn-primary" style="display: none;">Print Receipt</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
