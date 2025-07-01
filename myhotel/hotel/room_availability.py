@@ -1,6 +1,9 @@
-from django.utils.dateparse import parse_date
-from .models import RoomType, Room
-from decimal import Decimal
+import logging
+from datetime import datetime
+from django.utils import timezone
+from .models import RoomType, Booking, Room
+
+logger = logging.getLogger(__name__)
 
 class RoomAvailabilityChecker:
     def __init__(self):
@@ -8,76 +11,92 @@ class RoomAvailabilityChecker:
         self.form_data = {}
 
     def check_availability(self, checkin_str, checkout_str, room_type_id, requested_rooms, guest):
-        self.errors = []
-        self.form_data= {
+        self.form_data = {
             'checkin': checkin_str,
             'checkout': checkout_str,
-            'room': requested_rooms,
-            'room_type': room_type_id,
-            'guest': guest,
+            'room_type_id': room_type_id,
+            'requested_rooms': requested_rooms,
+            'guest': guest
         }
 
-        # Validate dates
-        if not checkin_str or not checkout_str:
-            self.errors.append("Please provide both check-in and check-out dates.")
+        # Validate inputs
+        if not all([checkin_str, checkout_str, room_type_id, requested_rooms]):
+            self.errors.append("All fields (check-in, check-out, room type, number of rooms) are required.")
+            logger.warning(f"Missing required fields: {self.errors}")
             return {'errors': self.errors, 'form_data': self.form_data}
 
-        checkin = parse_date(checkin_str)
-        checkout = parse_date(checkout_str)
-        if not checkin or not checkout:
-            self.errors.append("Invalid date format.")
-            return {'errors': self.errors, 'form_data': self.form_data}
-        if checkin >= checkout:
-            self.errors.append("Check-in must be before check-out.")
-            return {'errors': self.errors, 'form_data': self.form_data}
-
-        # Validate room type
-        if not room_type_id:
-            self.errors.append("Please select a room type.")
+        try:
+            checkin = datetime.strptime(checkin_str, '%Y-%m-%d').date()
+            checkout = datetime.strptime(checkout_str, '%Y-%m-%d').date()
+            if checkin >= checkout:
+                self.errors.append("Check-out date must be after check-in date.")
+                logger.warning(f"Invalid dates: {self.errors}")
+                return {'errors': self.errors, 'form_data': self.form_data}
+            if checkin < timezone.now().date():
+                self.errors.append("Check-in date cannot be in the past.")
+                logger.warning(f"Past check-in date: {self.errors}")
+                return {'errors': self.errors, 'form_data': self.form_data}
+        except ValueError:
+            self.errors.append("Invalid date format. Use YYYY-MM-DD.")
+            logger.warning(f"Date format error: {self.errors}")
             return {'errors': self.errors, 'form_data': self.form_data}
 
         try:
             room_type = RoomType.objects.get(id=room_type_id)
-            requested_rooms = int(requested_rooms)
-            expected_guests = room_type.capacity * requested_rooms
-
-            # Validate guest count
-            if int(guest) != expected_guests:
-                self.errors.append("Guest count does not match room type capacity and number of rooms.")
+            requested_rooms = int(requested_rooms) if requested_rooms else 0
+            if requested_rooms <= 0:
+                self.errors.append("Number of rooms must be greater than 0.")
+                logger.warning(f"Invalid room count: {self.errors}")
                 return {'errors': self.errors, 'form_data': self.form_data}
 
-            # Find available rooms
-            available_rooms = Room.objects.filter(
+            # Validate guest count only if provided
+            if guest:
+                expected_guests = room_type.capacity * requested_rooms
+                guest = int(guest) if guest else 0
+                if guest != expected_guests:
+                    self.errors.append("Guest count does not match room type capacity and number of rooms.")
+                    logger.warning(f"Guest count mismatch: {self.errors}")
+                    return {'errors': self.errors, 'form_data': self.form_data}
+
+            # Check availability logic
+            # Get all rooms of the specified room type
+            rooms = Room.objects.filter(
                 room_type=room_type,
                 is_available=True
-            ).exclude(
-                booking__checkin__lt=checkout,
-                booking__checkout__gt=checkin,
-                booking__status='confirmed'
             )
-
-            available_count = available_rooms.count()
-
-            if available_count >= requested_rooms:
-                # Calculate price details
-                base_price = room_type.base_price
+            # Count booked rooms for these rooms during the requested period
+            booked_rooms = Booking.objects.filter(
+                room__in=rooms,
+                room__isnull=False,
+                checkin__lt=checkout,
+                checkout__gt=checkin,
+                status__in=['confirmed', 'pending']
+            ).count()
+            available_rooms = rooms.count() - booked_rooms
+            if available_rooms >= requested_rooms:
                 number_of_nights = (checkout - checkin).days
-                total_cost = base_price * number_of_nights * requested_rooms
-                availability_message = "Room available"
+                base_price = room_type.base_price
+                total_cost = base_price * requested_rooms * number_of_nights
                 return {
-                    'availability_message': availability_message,
-                    'base_price': str(base_price),  # Convert to string for JSON
-                    'total_cost': str(total_cost),
+                    'availability_message': 'Room available',
+                    'base_price': f'₦{base_price}',
+                    'total_cost': f'₦{total_cost}',
                     'number_of_nights': number_of_nights,
                     'form_data': self.form_data
                 }
             else:
-                availability_message = "No Room available"
-                return {
-                    'availability_message': availability_message,
-                    'form_data': self.form_data
-                }
-
+                self.errors.append(f"Only {available_rooms} rooms available for the selected type and dates.")
+                logger.warning(f"Insufficient rooms: {self.errors}")
+                return {'errors': self.errors, 'form_data': self.form_data}
         except RoomType.DoesNotExist:
             self.errors.append("Selected room type does not exist.")
+            logger.warning(f"Room type not found: {self.errors}")
+            return {'errors': self.errors, 'form_data': self.form_data}
+        except ValueError:
+            self.errors.append("Invalid number of rooms or guests.")
+            logger.warning(f"Invalid number format: {self.errors}")
+            return {'errors': self.errors, 'form_data': self.form_data}
+        except Exception as e:
+            self.errors.append(f"Unexpected error checking availability: {str(e)}")
+            logger.error(f"Unexpected error in check_availability: {str(e)}")
             return {'errors': self.errors, 'form_data': self.form_data}
