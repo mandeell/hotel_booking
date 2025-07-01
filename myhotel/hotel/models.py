@@ -25,6 +25,7 @@ class HotelAmenity(models.Model):
 class RoomAmenity(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
+    icon_name = models.CharField(max_length=200, null=True, blank=True)
     def __str__(self):
         return self.name
 
@@ -70,6 +71,7 @@ class Booking(models.Model):
                                                       ('confirmed', 'Confirmed'),
                                                       ('cancelled', 'Cancelled')],
                               default='pending')
+    transaction_id = models.CharField(max_length=100, blank=True, null=True)
 
     def clean(self):
         # Ensure check-in is before check-out
@@ -94,7 +96,7 @@ class Booking(models.Model):
 
     def save(self, *args, **kwargs):
         # Calculate total price based on number of nights
-        number_of_nights = (self.checkout.date() - self.checkin.date()).days
+        number_of_nights = (self.checkout - self.checkin).days
         if number_of_nights < 1:
             raise ValidationError("Checkout must be at least one day after checkin.")
         self.total_price = self.room.room_type.base_price * number_of_nights
