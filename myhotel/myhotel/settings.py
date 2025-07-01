@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -121,8 +122,8 @@ LOGGING = {
     },
 }
 
-PAYSTACK_SECRET_KEY = 'sk_test_fff4bc346a549bdf0c77bc8f45e21dd7e7b6c765'
-FLUTTERWAVE_PUBLIC_KEY = 'FLWPUBK_TEST-fe7aa1fba2c31ff3310155178b31350f-X'
+PAYSTACK_SECRET_KEY = config('PAYSTACK_SECRET_KEY')
+PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY')
 
 
 # Email settings
