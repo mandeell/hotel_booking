@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log('Initiating payment with:', { totalCost, email, phone, reference });
 
                 const handler = PaystackPop.setup({
-                    key: window.PAYSTACK_PUBLIC_KEY || 'pk_test_f32ac6a155ff0bee5c5b86e25499cf957b6e8c51',
+                    key: window.PAYSTACK_PUBLIC_KEY,
                     email: email,
                     amount: totalCost * 100,
                     currency: 'NGN',
