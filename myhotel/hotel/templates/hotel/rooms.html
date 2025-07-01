@@ -1,0 +1,45 @@
+{% load static %}
+<section id="rooms" class="rooms-section py-5">
+  <div class="container">
+    <div class="section-header text-center mb-5">
+      <h2 class="section-title">Our Premium Rooms</h2>
+      <p class="section-subtitle">Choose from our carefully curated selection of luxury accommodations</p>
+    </div>
+    <div class="row">
+      {% for room_type in room_types %}
+        <div class="col-lg-4 col-md-6 mb-4">
+          <div class="room-card">
+            <div class="room-image">
+              <img
+                src="{% if room_type.image %}{{ room_type.image.url }}{% else %}https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80{% endif %}"
+                alt="{{ room_type.name }}"
+              />
+              <div class="room-overlay">
+                <button class="btn btn-gold" onclick="bookRoom('{{ room_type.id }}')">
+                  Book Now
+                </button>
+              </div>
+            </div>
+            <div class="room-info">
+              <h4>{{ room_type.name }}</h4>
+              <p class="room-description">{{ room_type.description }}</p>
+              <div class="room-features">
+                {% for amenity in room_type.amenities.all %}
+                  <span><i class="fas fa-{{ amenity.icon_name}}"></i> {{ amenity.name }}</span>
+                {% empty %}
+                  <span>No amenities listed</span>
+                {% endfor %}
+              </div>
+              <div class="room-price">
+                <span class="price text-dark">₦{{ room_type.display_price }}</span>
+                <span class="per-night">per night</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <p>No room types available.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
