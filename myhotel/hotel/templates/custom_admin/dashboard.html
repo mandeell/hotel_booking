@@ -1,0 +1,44 @@
+{% extends 'custom_admin/base_site.html' %}
+{% load static %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">Bookings Dashboard</h1>
+<link rel="stylesheet" href="{% static 'admin/css/dashboard.css' %}">
+<div class="w-full max-w-full">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 min-w-0 w-full max-w-full">
+      <div class="bg-white p-6 rounded shadow responsive-chart-container">
+          <h2 class="text-lg font-semibold mb-2">Bookings Today</h2>
+          <div class="w-full max-w-full"><canvas id="bookingsPerDayChart" class="responsive-chart-canvas"></canvas></div>
+      </div>
+      <div class="bg-white p-6 rounded shadow responsive-chart-container">
+          <h2 class="text-lg font-semibold mb-2">Bookings This Week</h2>
+          <div class="w-full max-w-full"><canvas id="bookingsPerWeekChart" class="responsive-chart-canvas"></canvas></div>
+      </div>
+      <div class="bg-white p-6 rounded shadow responsive-chart-container">
+          <h2 class="text-lg font-semibold mb-2">Bookings This Month</h2>
+          <div class="w-full max-w-full"><canvas id="bookingsPerMonthChart" class="responsive-chart-canvas"></canvas></div>
+      </div>
+      <div class="bg-white p-6 rounded shadow responsive-chart-container">
+          <h2 class="text-lg font-semibold mb-2">Bookings This Year</h2>
+          <div class="w-full max-w-full"><canvas id="bookingsPerYearChart" class="responsive-chart-canvas"></canvas></div>
+      </div>
+      <div class="bg-white p-6 rounded shadow responsive-chart-container">
+          <h2 class="text-lg font-semibold mb-2">All Bookings</h2>
+          <div class="w-full max-w-full"><canvas id="allBookingsChart" class="responsive-chart-canvas"></canvas></div>
+      </div>
+  </div>
+</div>
+{{ bookings_per_day|json_script:"bookingsPerDay-data" }}
+{{ bookings_per_week|json_script:"bookingsPerWeek-data" }}
+{{ bookings_per_month|json_script:"bookingsPerMonth-data" }}
+{{ bookings_per_year|json_script:"bookingsPerYear-data" }}
+{{ all_bookings|json_script:"allBookings-data" }}
+<script>
+    window.bookingsPerDay = JSON.parse(document.getElementById('bookingsPerDay-data').textContent);
+    window.bookingsPerWeek = JSON.parse(document.getElementById('bookingsPerWeek-data').textContent);
+    window.bookingsPerMonth = JSON.parse(document.getElementById('bookingsPerMonth-data').textContent);
+    window.bookingsPerYear = JSON.parse(document.getElementById('bookingsPerYear-data').textContent);
+    window.allBookings = JSON.parse(document.getElementById('allBookings-data').textContent);
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'admin/js/dashboard_charts.js' %}"></script>
+{% endblock %}
