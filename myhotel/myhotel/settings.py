@@ -13,8 +13,8 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = True
 
 # ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.pythonanywhere.com']
-ALLOWED_HOSTS = ['8c95-102-90-101-24.ngrok-free.app', '127.0.0.1']
-CSRF_TRUSTED_ORIGINS = ['https://8c95-102-90-101-24.ngrok-free.app']
+ALLOWED_HOSTS = ['94a5-102-90-102-220.ngrok-free.app', '127.0.0.1']
+CSRF_TRUSTED_ORIGINS = ['https://94a5-102-90-102-220.ngrok-free.app']
 
 
 # Application definition
@@ -125,8 +125,8 @@ PAYSTACK_PUBLIC_KEY = config('PAYSTACK_PUBLIC_KEY')
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 465
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT')
 EMAIL_USE_SSL = True
 EMAIL_USE_TLS = False
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
