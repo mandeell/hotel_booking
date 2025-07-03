@@ -43,36 +43,30 @@ class RoomAvailabilityChecker:
 
         try:
             room_type = RoomType.objects.get(id=room_type_id)
-            requested_rooms = int(requested_rooms) if requested_rooms else 0
-            if requested_rooms <= 0:
-                self.errors.append("Number of rooms must be greater than 0.")
-                logger.warning(f"Invalid room count: {self.errors}")
-                return {'errors': self.errors, 'form_data': self.form_data}
+            try:
+                requested_rooms = int(requested_rooms)
+                if requested_rooms < 1:
+                    requested_rooms = 1
+            except (TypeError, ValueError):
+                requested_rooms = 1
 
-            # Validate guest count only if provided
-            if guest:
-                expected_guests = room_type.capacity * requested_rooms
-                guest = int(guest) if guest else 0
-                if guest != expected_guests:
-                    self.errors.append("Guest count does not match room type capacity and number of rooms.")
-                    logger.warning(f"Guest count mismatch: {self.errors}")
-                    return {'errors': self.errors, 'form_data': self.form_data}
-
-            # Check availability logic
+            # Check availability logic (improved)
             # Get all rooms of the specified room type
             rooms = Room.objects.filter(
                 room_type=room_type,
                 is_available=True
             )
-            # Count booked rooms for these rooms during the requested period
-            booked_rooms = Booking.objects.filter(
-                room__in=rooms,
-                room__isnull=False,
-                checkin__lt=checkout,
-                checkout__gt=checkin,
-                status__in=['confirmed', 'pending']
-            ).count()
-            available_rooms = rooms.count() - booked_rooms
+            # Only count rooms that have no overlapping bookings for the requested period
+            available_rooms = 0
+            for room in rooms:
+                overlapping_bookings = Booking.objects.filter(
+                    room=room,
+                    checkin__lt=checkout,
+                    checkout__gt=checkin,
+                    status__in=['confirmed', 'pending']
+                )
+                if not overlapping_bookings.exists():
+                    available_rooms += 1
             if available_rooms >= requested_rooms:
                 number_of_nights = (checkout - checkin).days
                 base_price = room_type.base_price
@@ -84,8 +78,19 @@ class RoomAvailabilityChecker:
                     'number_of_nights': number_of_nights,
                     'form_data': self.form_data
                 }
+            elif available_rooms > 0:
+                number_of_nights = (checkout - checkin).days
+                base_price = room_type.base_price
+                total_cost = base_price * available_rooms * number_of_nights
+                return {
+                    'availability_message': f'Only {available_rooms} room(s) available for the selected type and dates.',
+                    'base_price': f'₦{base_price}',
+                    'total_cost': f'₦{total_cost}',
+                    'number_of_nights': number_of_nights,
+                    'form_data': self.form_data
+                }
             else:
-                self.errors.append(f"Only {available_rooms} rooms available for the selected type and dates.")
+                self.errors.append(f"No rooms available for the selected type and dates.")
                 logger.warning(f"Insufficient rooms: {self.errors}")
                 return {'errors': self.errors, 'form_data': self.form_data}
         except RoomType.DoesNotExist:
