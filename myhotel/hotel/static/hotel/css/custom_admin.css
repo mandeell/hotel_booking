@@ -1,0 +1,230 @@
+/* Soft UI Dashboard Style for Django Admin */
+:root {
+  --softui-primary: #5e72e4;
+  --softui-secondary: #f5365c;
+  --softui-accent: #ffd600;
+  --softui-bg: #f8f9fa;
+  --softui-surface: #fff;
+  --softui-text: #344767;
+  --softui-muted: #8392ab;
+  --softui-border: #e9ecef;
+  --softui-radius: 1rem;
+  --softui-shadow: 0 4px 24px 0 rgba(34,41,47,0.08);
+  --softui-sidebar-width: 250px;
+}
+
+body, #container, .dashboard #content {
+  background: var(--softui-bg) !important;
+  color: var(--softui-text) !important;
+  font-family: 'Open Sans', 'Segoe UI', Arial, sans-serif !important;
+  font-size: 1.05rem;
+}
+
+.softui-admin-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+.softui-sidebar {
+  width: var(--softui-sidebar-width);
+  background: var(--softui-surface);
+  box-shadow: var(--softui-shadow);
+  border-radius: 0 var(--softui-radius) var(--softui-radius) 0;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 1rem 1rem 1rem;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 1000;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+.sidebar-logo {
+  font-size: 2rem;
+  color: var(--softui-primary);
+  margin-right: 0.7rem;
+}
+.sidebar-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--softui-text);
+}
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+.sidebar-link {
+  color: var(--softui-muted);
+  font-size: 1.08rem;
+  font-weight: 600;
+  padding: 0.7rem 1rem;
+  border-radius: 0.7rem;
+  transition: background 0.18s, color 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  text-decoration: none;
+}
+.sidebar-link:hover, .sidebar-link.active {
+  background: var(--softui-primary);
+  color: #fff !important;
+}
+
+.softui-main {
+  margin-left: var(--softui-sidebar-width);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.softui-topbar {
+  background: var(--softui-surface);
+  box-shadow: var(--softui-shadow);
+  border-radius: 0 0 var(--softui-radius) var(--softui-radius);
+  padding: 1.2rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+.topbar-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--softui-primary);
+}
+.topbar-user {
+  color: var(--softui-muted);
+  font-size: 1.08rem;
+  font-weight: 600;
+}
+
+.softui-content {
+  padding: 2rem 2rem 2rem 2rem;
+  background: var(--softui-bg);
+  border-radius: var(--softui-radius);
+  min-height: 80vh;
+}
+
+.module, .grp-module, .grp-group, .change-form, .grp-change-form {
+  background: var(--softui-surface) !important;
+  border-radius: var(--softui-radius);
+  box-shadow: var(--softui-shadow);
+  border: 1px solid var(--softui-border) !important;
+  margin-bottom: 2rem;
+  padding: 2rem 2rem 1.5rem 2rem;
+}
+
+.module caption, .grp-module caption {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--softui-primary) !important;
+  background: transparent !important;
+  padding: 0.8rem 1.2rem 0.5rem 0;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6, .module caption, .grp-module caption {
+  color: var(--softui-primary) !important;
+  font-family: 'Open Sans', 'Segoe UI', Arial, sans-serif !important;
+}
+
+a, .breadcrumbs a, .module a, .grp-module a {
+  color: var(--softui-primary) !important;
+  transition: color 0.18s;
+  text-decoration: none;
+}
+a:hover, .breadcrumbs a:hover, .module a:hover, .grp-module a:hover {
+  color: var(--softui-secondary) !important;
+  text-decoration: underline;
+}
+
+/* Soft UI Buttons */
+.button, input[type="submit"], input[type="button"], .default, .grp-button {
+  background: var(--softui-primary) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 0.7rem !important;
+  box-shadow: var(--softui-shadow);
+  font-weight: 700;
+  padding: 0.7rem 1.6rem;
+  font-size: 1.05rem;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+}
+.button:hover, input[type="submit"]:hover, input[type="button"]:hover, .default:hover, .grp-button:hover {
+  background: var(--softui-secondary) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 24px 0 rgba(245,54,92,0.10);
+}
+
+/* Table headers and rows */
+th, .grp-table th {
+  background: #f1f5f9 !important;
+  color: var(--softui-primary) !important;
+  border-bottom: 2px solid var(--softui-primary) !important;
+  font-size: 1rem;
+  font-weight: 700;
+}
+tr, .grp-table tr {
+  background: var(--softui-surface) !important;
+  border-bottom: 1px solid var(--softui-border) !important;
+  transition: background 0.18s;
+}
+tr:hover, .grp-table tr:hover {
+  background: #f9fafb !important;
+}
+
+/* Forms */
+input, select, textarea {
+  background: #fff !important;
+  color: var(--softui-text) !important;
+  border: 1px solid var(--softui-border) !important;
+  border-radius: 0.7rem !important;
+  padding: 0.6rem 1.1rem;
+  margin-bottom: 1rem;
+  transition: border 0.18s, box-shadow 0.18s;
+  font-size: 1.05rem;
+}
+input:focus, select:focus, textarea:focus {
+  border: 1.5px solid var(--softui-primary) !important;
+  box-shadow: 0 0 0 2px #5e72e422;
+  outline: none;
+}
+label, .grp-label {
+  font-weight: 600;
+  color: var(--softui-text) !important;
+  margin-bottom: 0.3rem;
+}
+
+/* Responsive/mobile tweaks */
+@media (max-width: 991px) {
+  .softui-sidebar {
+    display: none;
+  }
+  .softui-main {
+    margin-left: 0;
+  }
+}
+@media (max-width: 767px) {
+  .softui-content, .module, .grp-module, .grp-group, .change-form, .grp-change-form {
+    margin-bottom: 1.2rem;
+    padding: 1rem;
+  }
+  th, .grp-table th {
+    font-size: 0.97rem;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--softui-primary);
+  border-radius: 8px;
+}
