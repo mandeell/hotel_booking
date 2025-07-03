@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     formData.get('modalCheckin'),
                     formData.get('modalCheckout'),
                     formData.get('roomType'),
-                    formData.get('modalRooms'),
+                    formData.get('rooms'),
                     formData.get('modalGuests')
                 );
                 if (availability.errors?.length > 0 || availability.availability_message !== 'Room available') {
