@@ -2,6 +2,9 @@ from django.urls import path
 from . import views, booking
 from .booking import submit_booking
 from .views import check_availability_ajax, home, contact_submit
+from .dashboard import dashboard_view
+from .custom_admin import admin_site as custom_admin_site
+from .views_hotel import hotel_detail_edit_view
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -11,4 +14,7 @@ urlpatterns = [
     path('verify-payment', booking.verify_payment, name='verify_payment'),
     path('store-expected-amount', booking.store_expected_amount, name='store_expected_amount'),
     path('webhook', booking.webhook, name='webhook'),
+    path('hotel/<int:hotel_id>/', hotel_detail_edit_view, name='hotel_detail'),
+    path('hotel/admin/', dashboard_view, name='dashboard'),
+    path('hotel/admin/dashboard/', dashboard_view, name='dashboard'),
 ]
