@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 from .contact_form import ContactFormHandler
-from .models import RoomType, Hotel, HotelAmenity, Room
+from .models import RoomType, Hotel, HotelAmenity, Room, Booking
 from .room_availability import RoomAvailabilityChecker
 
 def home(request):
@@ -48,6 +48,7 @@ def check_availability_ajax(request):
         })
 
     return JsonResponse({'errors': ['Invalid request method']}, status=400)
+
 
 def contact_submit(request):
     if request.method == 'POST':
