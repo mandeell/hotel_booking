@@ -20,11 +20,13 @@ def submit_booking(request):
         return JsonResponse({'success': False, 'errors': 'Invalid request method'}, status=400)
 
     try:
+        logger.error(f"POST data received for booking: {dict(request.POST)}")
         checkin = parse_date(request.POST.get('modalCheckin'))
         checkout = parse_date(request.POST.get('modalCheckout'))
         room_type_id = request.POST.get('roomType')
         guests = int(request.POST.get('modalGuests', 0))
-        rooms = int(request.POST.get('modalRooms', 0))
+        # Accept both modalRooms and rooms for robustness
+        rooms = int(request.POST.get('modalRooms') or request.POST.get('rooms') or 0)
         base_price_str = request.POST.get('modalBasePrice', '0').replace('₦', '').strip()
         total_cost_str = request.POST.get('modalTotalCost', '0').replace('₦', '').strip()
         first_name = request.POST.get('first_name')
@@ -32,6 +34,7 @@ def submit_booking(request):
         email = request.POST.get('email')
         phone = request.POST.get('phone')
         special_requests = request.POST.get('special_requests', '')
+        logger.error(f"transaction_id: {request.POST.get('transaction_id')}, payment_status: {request.POST.get('payment_status')}")
 
         required_fields = {
             'checkin': checkin, 'checkout': checkout, 'room_type': room_type_id,
@@ -65,8 +68,9 @@ def submit_booking(request):
             logger.warning(f"Not enough rooms available: {rooms} requested, {available_rooms.count()} available")
             return JsonResponse({'success': False, 'errors': f'Only {available_rooms.count()} room(s) available'}, status=400)
 
-        payment_status = request.session.get('payment_status')
-        transaction_id = request.session.get('transaction_id')
+        # Accept payment_status and transaction_id from POST (preferred over session)
+        payment_status = request.POST.get('payment_status') or request.session.get('payment_status')
+        transaction_id = request.POST.get('transaction_id') or request.session.get('transaction_id')
         expected_amount = request.session.get('expected_amount')
         if payment_status != 'success' or not transaction_id or not expected_amount:
             logger.warning("Booking attempted without successful payment")
@@ -148,7 +152,12 @@ def verify_payment(request):
             request.session['transaction_id'] = response_data['data']['id']
             request.session.modified = True
             logger.info(f"Payment verified: reference={reference}, transaction_id={response_data['data']['id']}")
-            return JsonResponse({'status': 'success', 'message': 'Payment verified'})
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Payment verified',
+                'transaction_id': response_data['data']['id'],
+                'payment_status': 'success'
+            })
         else:
             logger.warning(f"Payment verification failed: reference={reference}, response: {response_data}")
             return JsonResponse({'status': 'failed', 'message': 'Payment verification failed'}, status=400)
