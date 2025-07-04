@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Booking
+from hotel.models import Booking
 from django.db.models.functions import TruncDay, TruncMonth, TruncYear, ExtractWeek, ExtractYear, ExtractMonth
 from django.db.models import Count, Q
 from django.utils import timezone
@@ -103,4 +103,4 @@ def dashboard_view(request):
         'bookings_per_year': list(bookings_per_year),
         'all_bookings': all_bookings,
     }
-    return render(request, 'custom_admin/dashboard.html', context)
+    return render(request, 'admin/dashboard.html', context)

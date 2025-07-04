@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.template.loader import select_template
-from .models import Booking, Room, Hotel, RoomType, Guest, RoomAmenity, HotelAmenity
+from myhotel.hotel.models import Booking, Room, Hotel, RoomType, Guest, RoomAmenity, HotelAmenity
 
 class HotelAdminSite(admin.AdminSite):
     site_title = "Hotel Admin Portal"

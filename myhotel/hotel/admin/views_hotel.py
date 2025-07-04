@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Hotel
+from hotel.models import Hotel
 from django import forms
 
 class HotelForm(forms.ModelForm):
@@ -17,4 +17,4 @@ def hotel_detail_edit_view(request, hotel_id=1):
             return redirect('hotel_detail', hotel_id=hotel.id)
     else:
         form = HotelForm(instance=hotel)
-    return render(request, 'custom_admin/hotel_detail.html', {'hotel': hotel, 'form': form})
+    return render(request, 'admin/hotel_detail.html', {'hotel': hotel, 'form': form})

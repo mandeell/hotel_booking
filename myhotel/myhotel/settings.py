@@ -44,7 +44,10 @@ ROOT_URLCONF = 'myhotel.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [
+            BASE_DIR / 'hotel' / 'admin' / 'templates',
+            BASE_DIR / 'templates',
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -140,6 +143,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'hotel/static',
+    BASE_DIR / 'hotel/admin/static',
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'  # for production
 

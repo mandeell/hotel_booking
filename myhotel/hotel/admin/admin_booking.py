@@ -3,20 +3,20 @@ from django.urls import reverse
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
-from .models import Booking, Guest, Room
-from .forms import BookingForm
+from ..models import Booking, Guest, Room
+from ..forms import BookingForm
 from datetime import datetime
 
 # List all bookings
 def admin_bookings(request):
     bookings = Booking.objects.select_related('room').all().order_by('-created_at')
-    return render(request, 'custom_admin/bookings.html', {'bookings': bookings})
+    return render(request, 'admin/bookings.html', {'bookings': bookings})
 
 # View a single booking
 def admin_booking_view(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
     guests = Guest.objects.filter(booking=booking)
-    return render(request, 'custom_admin/booking_view.html', {'booking': booking, 'guests': guests})
+    return render(request, 'admin/booking_view.html', {'booking': booking, 'guests': guests})
 
 # Edit a booking
 def admin_booking_edit(request, booking_id):
@@ -58,7 +58,7 @@ def admin_booking_edit(request, booking_id):
         booking.save()
         messages.success(request, 'Booking updated successfully.')
         return redirect(reverse('custom_admin_bookings'))
-    return render(request, 'custom_admin/booking_edit.html', {
+    return render(request, 'admin/booking_edit.html', {
         'booking': booking,
         'available_rooms': available_rooms,
     })
