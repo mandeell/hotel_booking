@@ -1,5 +1,7 @@
 {% extends 'admin_panel/base_site.html' %}
 {% load static %}
+{% load permission_tags %}
+
 
 {% block content %}
 <div class="w-full max-w-full py-4 px-2 md:py-8 md:px-4">
@@ -10,9 +12,11 @@
             <p class="text-gray-600 mt-1">View complete booking information and guest details</p>
         </div>
         <div class="flex gap-3">
+            {% if user|has_perm:"edit_booking" %}
             <a href="{% url 'admin_panel:admin_booking_edit' booking.id %}" class="btn btn-primary">
                 <i class="fas fa-edit mr-2"></i>Edit Booking
             </a>
+            {% endif %}
             <a href="{% url 'admin_panel:admin_bookings' %}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left mr-2"></i>Back to Bookings
             </a>
