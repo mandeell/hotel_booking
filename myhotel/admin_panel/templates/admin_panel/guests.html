@@ -1,9 +1,11 @@
 {% extends 'admin_panel/base_site.html' %}
 {% load static %}
 {% block content %}
+{% load permission_tags %}
 <div class="w-full max-w-full py-4 px-2 md:py-8 md:px-4">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-2">
         <h2 class="text-xl md:text-2xl font-bold text-blue-800">Manage Guests</h2>
+        {% if request.user|has_perm:"view_guest" %}
         <a href="{% url 'admin_panel:admin_add_guest' %}" class="btn btn-primary">Add Guest</a>
     </div>
     <div class="bg-white rounded-lg shadow p-2 md:p-6 mobile-table-container">

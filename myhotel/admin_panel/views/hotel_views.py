@@ -14,7 +14,7 @@ def hotel_detail_edit_view(request, hotel_id):
         form = HotelForm(request.POST, request.FILES, instance=hotel)
         if form.is_valid():
             form.save()
-            return redirect('hotel_detail', hotel_id=hotel.id)
+            return redirect('admin_panel:hotel_detail', hotel_id=hotel.id)
     else:
         form = HotelForm(instance=hotel)
-    return render(request, 'admin/hotel_detail.html', {'hotel': hotel, 'form': form})
+    return render(request, 'admin_panel/hotel_detail.html', {'hotel': hotel, 'form': form})
