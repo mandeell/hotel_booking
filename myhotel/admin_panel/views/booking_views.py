@@ -82,7 +82,12 @@ def admin_booking_view(request, booking_id):
 @require_model_permission(Booking, 'edit', redirect_url='admin_panel:dashboard')
 def admin_booking_edit(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
-    
+
+    current_date = date.today()
+    if booking.checkin <= current_date:
+        messages.error(request, 'Cannot edit bookings with check-in date as the current day or in the past.')
+        return render(request, 'admin_panel/bookings.html', {'booking': booking})
+
     # Calculate original number of days paid for
     original_days = (booking.checkout - booking.checkin).days
     
@@ -144,8 +149,8 @@ def admin_booking_edit(request, booking_id):
 
 # Delete a booking
 @require_section_access('booking')
-@require_model_permission(Booking, 'delete', redirect_url='admin_panel:dashboard')
 @require_POST
+@require_model_permission(Booking, 'delete', redirect_url='admin_panel:dashboard')
 def admin_booking_delete(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
     booking.delete()

@@ -5,8 +5,9 @@
 <div class="w-full max-w-full py-4 px-2 md:py-8 md:px-4">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-2">
         <h2 class="text-xl md:text-2xl font-bold text-blue-800">Manage Guests</h2>
-        {% if request.user|has_perm:"view_guest" %}
+        {% if request.user|has_perm:"add_guest" %}
         <a href="{% url 'admin_panel:admin_add_guest' %}" class="btn btn-primary">Add Guest</a>
+        {% endif %}
     </div>
     <div class="bg-white rounded-lg shadow p-2 md:p-6 mobile-table-container">
         <table class="w-full mobile-table divide-y divide-gray-200 text-sm">
@@ -16,7 +17,9 @@
                     <th class="px-2 md:px-4 py-2 text-left text-xs font-semibold text-blue-700 uppercase whitespace-nowrap">Name</th>
                     <th class="px-2 md:px-4 py-2 text-left text-xs font-semibold text-blue-700 uppercase whitespace-nowrap">Email</th>
                     <th class="px-2 md:px-4 py-2 text-left text-xs font-semibold text-blue-700 uppercase whitespace-nowrap">Phone</th>
+                    {% if request.user|has_perm:"delete_guest" or request.user|has_perm:"edit_guest" %}
                     <th class="px-2 md:px-4 py-2 text-left text-xs font-semibold text-blue-700 uppercase whitespace-nowrap">Actions</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-100">
@@ -28,7 +31,10 @@
                     <td class="px-2 md:px-4 py-2 whitespace-nowrap">{{ guest.phone }}</td>
                     <td class="px-2 md:px-4 py-2 whitespace-nowrap">
                         <div class="flex flex-col lg:flex-row gap-1 lg:gap-2">
+                            {% if request.user|has_perm:"edit_guest" %}
                             <a href="{% url 'admin_panel:admin_edit_guest' guest.id %}" class="btn btn-sm btn-primary">Edit</a>
+                            {% endif %}
+                            {% if request.user|has_perm:"delete_guest" %}
                             <button type="button" 
                                         class="btn btn-sm btn-danger w-full lg:w-auto soft-delete-btn" 
                                         data-item-name="{{ guest.first_name }} {{ guest.last_name }}"
@@ -37,6 +43,7 @@
                                         data-redirect-url="{% url 'admin_panel:admin_guests' %}">
                                     Delete
                                 </button>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>

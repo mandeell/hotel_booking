@@ -12,7 +12,7 @@
             <p class="text-gray-600 mt-1">View complete booking information and guest details</p>
         </div>
         <div class="flex gap-3">
-            {% if user|has_perm:"edit_booking" %}
+            {% if request.user|has_perm:"edit_booking" %}
             <a href="{% url 'admin_panel:admin_booking_edit' booking.id %}" class="btn btn-primary">
                 <i class="fas fa-edit mr-2"></i>Edit Booking
             </a>

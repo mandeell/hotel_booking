@@ -13,10 +13,11 @@ from django.utils.crypto import get_random_string
 
 from hotel.models import UserRole, Role
 from ..forms import AdminUserRegistrationForm, AdminUserEditForm, UserSearchForm
-from ..permission_decorators import require_section_access, require_permission
+from ..permission_decorators import require_section_access, require_permission, require_model_permission
 
 
 @login_required
+@require_model_permission(User, 'view', redirect_url='admin_panel:user_list')
 def user_manager_list(request):
     """List all users with search and filtering"""
     form = UserSearchForm(request.GET)
@@ -73,6 +74,7 @@ def user_manager_list(request):
 
 
 @login_required
+@require_model_permission(User, 'add', redirect_url='admin_panel:dashboard')
 def user_manager_create(request):
     """Create a new user"""
     if request.method == 'POST':
@@ -95,6 +97,7 @@ def user_manager_create(request):
 
 
 @login_required
+@require_model_permission(User, 'view', redirect_url='admin_panel:dashboard')
 def user_manager_detail(request, user_id):
     """View user details"""
     user = get_object_or_404(User, id=user_id)
@@ -116,6 +119,7 @@ def user_manager_detail(request, user_id):
 
 
 @login_required
+@require_model_permission(User, 'edit', redirect_url='admin_panel:dashboard')
 def user_manager_edit(request, user_id):
     """Edit an existing user"""
     user = get_object_or_404(User, id=user_id)
@@ -141,6 +145,7 @@ def user_manager_edit(request, user_id):
 
 
 @login_required
+@require_model_permission(User, 'delete', redirect_url='admin_panel:dashboard')
 def user_manager_delete(request, user_id):
     """Delete a user"""
     user = get_object_or_404(User, id=user_id)
@@ -153,6 +158,7 @@ def user_manager_delete(request, user_id):
     if user == request.user:
         messages.error(request, 'Cannot delete your own account.')
         return redirect('admin_panel:user_manager_detail', user_id=user.id)
+
     
     if request.method == 'POST':
         username = user.username
@@ -171,6 +177,7 @@ def user_manager_delete(request, user_id):
 
 @require_POST
 @login_required
+@require_model_permission(User, 'edit', redirect_url='admin_panel:user_list')
 def user_manager_toggle_status(request, user_id):
     """Toggle user active status"""
     user = get_object_or_404(User, id=user_id)
@@ -194,6 +201,7 @@ def user_manager_toggle_status(request, user_id):
 
 
 @login_required
+@require_model_permission(Role, 'edit', redirect_url='admin_panel:user_list')
 def user_manager_assign_role(request, user_id):
     """Assign role to user"""
     user = get_object_or_404(User, id=user_id)
@@ -225,6 +233,7 @@ def user_manager_assign_role(request, user_id):
 
 @require_POST
 @login_required
+@require_model_permission(Role, 'edit', redirect_url='admin_panel:user_list')
 def user_manager_remove_role(request, user_id, role_id):
     """Remove role from user"""
     user = get_object_or_404(User, id=user_id)
