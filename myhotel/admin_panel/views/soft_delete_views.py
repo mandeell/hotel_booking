@@ -6,7 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 import json
 
-from hotel.models import Booking, Room, RoomType, RoomAmenity, HotelAmenity, Guest
+from hotel.models import Booking, Room, RoomType, RoomAmenity, HotelAmenity, Guest, Hotel
 
 
 @login_required
@@ -235,3 +235,47 @@ def soft_delete_guest(request, guest_id):
         else:
             messages.error(request, f'Error deleting guest: {str(e)}')
             return redirect('admin_panel:admin_guests')
+
+
+@login_required
+@require_POST
+def soft_delete_hotel(request, hotel_id):
+    """Soft delete a hotel"""
+    try:
+        hotel = get_object_or_404(Hotel, id=hotel_id)
+        
+        # Check if hotel has associated rooms
+        associated_rooms = Room.objects.filter(hotel=hotel).count()
+        
+        if associated_rooms > 0:
+            error_msg = f'Cannot delete hotel "{hotel.name}". It has {associated_rooms} associated room(s).'
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'message': error_msg
+                }, status=400)
+            else:
+                messages.error(request, error_msg)
+                return redirect('admin_panel:hotel_list')
+        
+        # Perform soft delete
+        hotel.soft_delete(user=request.user)
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'message': f'Hotel "{hotel.name}" has been deleted successfully.'
+            })
+        else:
+            messages.success(request, f'Hotel "{hotel.name}" has been deleted successfully.')
+            return redirect('admin_panel:hotel_list')
+            
+    except Exception as e:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'message': f'Error deleting hotel: {str(e)}'
+            }, status=400)
+        else:
+            messages.error(request, f'Error deleting hotel: {str(e)}')
+            return redirect('admin_panel:hotel_list')

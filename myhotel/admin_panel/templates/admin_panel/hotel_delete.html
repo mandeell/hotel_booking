@@ -1,0 +1,201 @@
+{% extends 'admin_panel/base_site.html' %}
+{% load static %}
+
+{% block content %}
+<div class="w-full max-w-full py-4 px-2 md:py-8 md:px-4">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Delete Hotel</h1>
+            <p class="text-gray-600 mt-1">Confirm deletion of hotel from the system</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'admin_panel:hotel_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Hotels
+            </a>
+        </div>
+    </div>
+
+    <!-- Confirmation Container -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden max-w-2xl mx-auto">
+        <div class="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4">
+            <h2 class="text-xl font-semibold text-white flex items-center">
+                <i class="fas fa-exclamation-triangle mr-3"></i>Confirm Deletion
+            </h2>
+        </div>
+        
+        <div class="p-6 md:p-8">
+            <!-- Warning Message -->
+            <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-red-800 font-semibold mb-2">Warning: This action cannot be undone!</h3>
+                        <p class="text-red-700 text-sm">
+                            You are about to delete this hotel. This will permanently remove all hotel information from the system.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hotel Information -->
+            <div class="mb-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-hotel mr-2 text-red-600"></i>Hotel to be deleted:
+                </h3>
+                
+                <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0">
+                        {% if hotel.hotel_logo %}
+                            <img src="{{ hotel.hotel_logo.url }}" alt="Hotel Logo" class="h-16 w-16 rounded-lg object-cover border-2 border-gray-300">
+                        {% else %}
+                            <div class="h-16 w-16 rounded-lg bg-gray-200 flex items-center justify-center text-gray-400 border-2 border-gray-300">
+                                <i class="fas fa-hotel text-xl"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex-1">
+                        <h4 class="text-lg font-semibold text-gray-900">{{ hotel.name }}</h4>
+                        <p class="text-gray-600 text-sm mt-1">
+                            <i class="fas fa-envelope mr-1"></i>{{ hotel.contact_email }}
+                        </p>
+                        <p class="text-gray-600 text-sm">
+                            <i class="fas fa-phone mr-1"></i>{{ hotel.contact_phone }}
+                        </p>
+                        <p class="text-gray-600 text-sm">
+                            <i class="fas fa-map-marker-alt mr-1"></i>{{ hotel.address|truncatechars:50 }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Associated Data Warning -->
+            {% if hotel.room_set.count > 0 %}
+            <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-circle text-yellow-600 text-xl"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-yellow-800 font-semibold mb-2">Associated Data Found</h3>
+                        <p class="text-yellow-700 text-sm mb-2">
+                            This hotel has <strong>{{ hotel.room_set.count }} room{{ hotel.room_set.count|pluralize }}</strong> associated with it.
+                        </p>
+                        <p class="text-yellow-700 text-sm">
+                            <strong>Note:</strong> You cannot delete this hotel until all associated rooms are removed or transferred to another hotel.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Confirmation Form -->
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                
+                <!-- Confirmation Checkbox -->
+                <div class="flex items-start">
+                    <input type="checkbox" id="confirmDelete" name="confirm_delete" required 
+                           class="mt-1 rounded border-gray-300 text-red-600 focus:ring-red-500" 
+                           {% if hotel.room_set.count > 0 %}disabled{% endif %}>
+                    <label for="confirmDelete" class="ml-3 text-sm text-gray-700">
+                        I understand that this action cannot be undone and I want to permanently delete 
+                        <strong>"{{ hotel.name }}"</strong> from the system.
+                    </label>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
+                    {% if hotel.room_set.count == 0 %}
+                    <button type="submit" class="btn btn-danger flex-1 sm:flex-none" id="deleteButton" disabled>
+                        <i class="fas fa-trash mr-2"></i>Delete Hotel
+                    </button>
+                    {% else %}
+                    <div class="btn btn-danger-disabled flex-1 sm:flex-none cursor-not-allowed opacity-50">
+                        <i class="fas fa-trash mr-2"></i>Cannot Delete (Has Rooms)
+                    </div>
+                    {% endif %}
+                    <a href="{% url 'admin_panel:hotel_detail' hotel.id %}" class="btn btn-secondary flex-1 sm:flex-none">
+                        <i class="fas fa-eye mr-2"></i>View Hotel
+                    </a>
+                    <a href="{% url 'admin_panel:hotel_list' %}" class="btn btn-secondary flex-1 sm:flex-none">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    box-shadow: 0 6px 8px -1px rgba(239, 68, 68, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-danger:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-danger-disabled {
+    background: #9ca3af;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+}
+
+.btn-secondary {
+    background: #f8fafc;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmCheckbox = document.getElementById('confirmDelete');
+    const deleteButton = document.getElementById('deleteButton');
+    
+    if (confirmCheckbox && deleteButton) {
+        confirmCheckbox.addEventListener('change', function() {
+            deleteButton.disabled = !this.checked;
+        });
+    }
+});
+</script>
+{% endblock %}

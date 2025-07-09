@@ -89,14 +89,44 @@ def submit_booking(request):
         )
         booking.save()
 
-        # Create guest and associate with booking
-        guest = Guest.objects.create(
-            booking=booking,
-            first_name=first_name,
-            last_name=last_name,
-            email=email,
-            phone=phone
-        )
+        # Check if guest already exists before creating a new one
+        # First try to find by email (primary identifier)
+        existing_guest = Guest.objects.filter(email=email).first()
+        
+        if existing_guest:
+            # Guest exists, update their information if needed and associate with new booking
+            guest = existing_guest
+            # Update guest information in case it has changed
+            guest.first_name = first_name
+            guest.last_name = last_name
+            guest.phone = phone
+            guest.booking = booking  # Associate with the new booking
+            guest.save()
+            logger.info(f"Existing guest found and updated: {email}")
+        else:
+            # Check if guest exists by phone number as secondary identifier
+            existing_guest_by_phone = Guest.objects.filter(phone=phone).first()
+            
+            if existing_guest_by_phone:
+                # Guest exists with same phone but different email
+                # Update their information and associate with new booking
+                guest = existing_guest_by_phone
+                guest.first_name = first_name
+                guest.last_name = last_name
+                guest.email = email  # Update email
+                guest.booking = booking
+                guest.save()
+                logger.info(f"Existing guest found by phone and updated: {phone} -> {email}")
+            else:
+                # No existing guest found, create new one
+                guest = Guest.objects.create(
+                    booking=booking,
+                    first_name=first_name,
+                    last_name=last_name,
+                    email=email,
+                    phone=phone
+                )
+                logger.info(f"New guest created: {email}")
 
         logger.info(f"Booking created: ID {booking.id} for {guest.email}, transaction_id={transaction_id}")
         return JsonResponse({'success': True, 'booking_id': booking.id})

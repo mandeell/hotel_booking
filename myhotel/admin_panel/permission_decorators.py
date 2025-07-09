@@ -7,6 +7,15 @@ from django.core.exceptions import PermissionDenied
 from hotel.models import UserRole, Permission
 
 
+def require_superuser(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_superuser:
+            messages.error(request, 'Only superusers can perform this action.')
+            return redirect('admin_panel:dashboard')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
 def has_permission(user, permission_codename):
     """
     Check if a user has a specific permission through their roles

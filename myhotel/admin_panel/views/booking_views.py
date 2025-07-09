@@ -85,8 +85,8 @@ def admin_booking_edit(request, booking_id):
 
     current_date = date.today()
     if booking.checkin <= current_date:
-        messages.error(request, 'Cannot edit bookings with check-in date as the current day or in the past.')
-        return render(request, 'admin_panel/bookings.html', {'booking': booking})
+        messages.error(request, 'Sorry! Cannot edit booking.')
+        return redirect(reverse('admin_panel:admin_bookings'))
 
     # Calculate original number of days paid for
     original_days = (booking.checkout - booking.checkin).days
@@ -107,7 +107,7 @@ def admin_booking_edit(request, booking_id):
             new_days = (checkout - checkin).days
             if new_days > original_days:
                 messages.error(request, f'Cannot extend booking beyond {original_days} days already paid for. New booking duration is {new_days} days.')
-                return redirect(reverse('admin_booking_edit', args=[booking_id]))
+                return redirect(reverse('admin_panel:admin_booking_edit', args=[booking_id]))
                 
         except Exception:
             checkin = booking.checkin
@@ -137,7 +137,7 @@ def admin_booking_edit(request, booking_id):
         booking.checkout = checkout
         booking.save()
         messages.success(request, 'Booking updated successfully.')
-        return redirect(reverse('admin_bookings'))
+        return redirect(reverse('admin_panel:admin_bookings'))
     
     context = {
         'booking': booking,
@@ -155,7 +155,7 @@ def admin_booking_delete(request, booking_id):
     booking = get_object_or_404(Booking, id=booking_id)
     booking.delete()
     messages.success(request, 'Booking deleted successfully.')
-    return redirect(reverse('admin_bookings'))
+    return redirect(reverse('admin_panel:admin_bookings'))
 
 # AJAX endpoint for room availability
 from django.views.decorators.csrf import csrf_exempt

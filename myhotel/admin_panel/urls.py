@@ -8,7 +8,13 @@ from .views.booking_views import (
     api_check_room_availability,
 )
 from .views.dashboard import DashboardView
-from .views.hotel_views import hotel_detail_edit_view
+from .views.hotel_views import (
+    hotel_detail_view,
+    hotel_detail_edit_view,
+    hotel_create_view,
+    hotel_list_view,
+    hotel_delete_view,
+)
 
 from .views.room_views import AdminRoomListView, AdminRoomCreateView, AdminRoomDeleteView, AdminRoomEditView
 from .views.guest_views import AdminGuestListView, AdminGuestCreateView, AdminGuestDeleteView, AdminGuestEditView
@@ -40,6 +46,7 @@ from .views.soft_delete_views import (
     soft_delete_room_amenity,
     soft_delete_hotel_amenity,
     soft_delete_guest,
+    soft_delete_hotel,
 )
 from .views.user_manager_views import (
     user_manager_list,
@@ -83,8 +90,15 @@ urlpatterns = [
     path('bookings/<int:booking_id>/delete/', admin_booking_delete, name='admin_booking_delete'),
     path('api/check-room-availability/', api_check_room_availability, name='api_check_room_availability'),
     
-    # Hotel
-    path('hotel/<int:hotel_id>/', hotel_detail_edit_view, name='hotel_detail'),
+    # Hotel Management
+    path('hotels/', hotel_list_view, name='hotel_list'),
+    path('hotels/add/', hotel_create_view, name='hotel_create'),
+    path('hotels/<int:hotel_id>/', hotel_detail_view, name='hotel_detail'),
+    path('hotels/<int:hotel_id>/edit/', hotel_detail_edit_view, name='hotel_edit'),
+    path('hotels/<int:hotel_id>/delete/', hotel_delete_view, name='hotel_delete'),
+    
+    # Legacy URL for backward compatibility
+    path('hotel/<int:hotel_id>/', hotel_detail_edit_view, name='hotel_detail_legacy'),
 
     # Rooms
     path('rooms/', AdminRoomListView.as_view(), name='admin_rooms'),
@@ -156,4 +170,5 @@ urlpatterns = [
     path('room-amenities/<int:room_amenity_id>/soft-delete/', soft_delete_room_amenity, name='soft_delete_room_amenity'),
     path('hotel-amenities/<int:hotel_amenity_id>/soft-delete/', soft_delete_hotel_amenity, name='soft_delete_hotel_amenity'),
     path('guests/<int:guest_id>/soft-delete/', soft_delete_guest, name='soft_delete_guest'),
+    path('hotels/<int:hotel_id>/soft-delete/', soft_delete_hotel, name='soft_delete_hotel'),
 ]

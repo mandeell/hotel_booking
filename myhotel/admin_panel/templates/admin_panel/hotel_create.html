@@ -1,0 +1,206 @@
+{% extends 'admin_panel/base_site.html' %}
+{% load static %}
+
+{% block content %}
+<div class="w-full max-w-full py-4 px-2 md:py-8 md:px-4">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Create New Hotel</h1>
+            <p class="text-gray-600 mt-1">Add a new hotel to the system</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'admin_panel:hotel_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Hotels
+            </a>
+        </div>
+    </div>
+
+    <!-- Form Container -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden max-w-4xl mx-auto">
+        <div class="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4">
+            <h2 class="text-xl font-semibold text-white flex items-center">
+                <i class="fas fa-plus mr-3"></i>New Hotel Information
+            </h2>
+        </div>
+        
+        <form method="post" enctype="multipart/form-data" class="p-6 md:p-8">
+            {% csrf_token %}
+            
+            <!-- Display form errors -->
+            {% if form.errors %}
+            <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>
+                    <h3 class="text-red-800 font-semibold">Please correct the following errors:</h3>
+                </div>
+                <ul class="list-disc list-inside text-red-700 text-sm">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ field|capfirst }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Hotel Logo Section -->
+            <div class="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-image mr-2 text-green-600"></i>Hotel Logo
+                </h3>
+                <div class="flex flex-col md:flex-row items-start gap-6">
+                    <div class="flex-shrink-0">
+                        <div class="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 border-4 border-gray-300" id="logoPreview">
+                            <i class="fas fa-hotel text-2xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Upload Hotel Logo</label>
+                        {{ form.hotel_logo }}
+                        <p class="mt-1 text-sm text-gray-500">PNG, JPG or JPEG (MAX. 5MB). Recommended size: 200x200px</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hotel Details -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Hotel Name -->
+                <div class="form-group">
+                    <label for="{{ form.name.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Hotel Name <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Contact Email -->
+                <div class="form-group">
+                    <label for="{{ form.contact_email.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Contact Email <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.contact_email }}
+                    {% if form.contact_email.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.contact_email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Contact Phone -->
+                <div class="form-group">
+                    <label for="{{ form.contact_phone.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Contact Phone <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.contact_phone }}
+                    {% if form.contact_phone.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.contact_phone.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Address -->
+                <div class="form-group md:col-span-2">
+                    <label for="{{ form.address.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Address <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.address }}
+                    {% if form.address.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.address.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Description -->
+                <div class="form-group md:col-span-2">
+                    <label for="{{ form.description.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Description
+                    </label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.description.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-sm text-gray-500">Provide a detailed description of your hotel for guests</p>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex flex-col sm:flex-row gap-3 pt-8 mt-8 border-t border-gray-200">
+                <button type="submit" class="btn btn-primary flex-1 sm:flex-none">
+                    <i class="fas fa-save mr-2"></i>Create Hotel
+                </button>
+                <a href="{% url 'admin_panel:hotel_list' %}" class="btn btn-secondary flex-1 sm:flex-none">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.form-group label {
+    font-weight: 600;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    box-shadow: 0 6px 8px -1px rgba(34, 197, 94, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #f8fafc;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Logo preview functionality
+    const logoInput = document.getElementById('{{ form.hotel_logo.id_for_label }}');
+    const logoPreview = document.getElementById('logoPreview');
+    
+    if (logoInput) {
+        logoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    logoPreview.innerHTML = `<img src="${e.target.result}" alt="Logo Preview" class="h-24 w-24 rounded-full object-cover">`;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                logoPreview.innerHTML = '<i class="fas fa-hotel text-2xl"></i>';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

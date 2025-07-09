@@ -1,0 +1,248 @@
+{% extends 'admin_panel/base_site.html' %}
+{% load static %}
+{% load permission_tags %}
+
+{% block content %}
+<div class="w-full max-w-full py-4 px-2 md:py-8 md:px-4">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Hotel Details</h1>
+            <p class="text-gray-600 mt-1">View hotel information and settings</p>
+        </div>
+        <div class="flex gap-3">
+            {% if request.user.is_superuser %}
+            <a href="{% url 'admin_panel:hotel_edit' hotel.id %}" class="btn btn-primary">
+                <i class="fas fa-edit mr-2"></i>Edit Hotel
+            </a>
+            {% endif %}
+            {% if request.user.is_superuser %}
+            <a href="{% url 'admin_panel:hotel_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Hotels
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Hotel Information Container -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden max-w-4xl mx-auto">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+            <h2 class="text-xl font-semibold text-white flex items-center">
+                <i class="fas fa-hotel mr-3"></i>{{ hotel.name }}
+            </h2>
+        </div>
+        
+        <div class="p-6 md:p-8">
+            <!-- Hotel Logo Section -->
+            <div class="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-image mr-2 text-blue-600"></i>Hotel Logo
+                </h3>
+                <div class="flex flex-col md:flex-row items-start gap-6">
+                    <div class="flex-shrink-0">
+                        {% if hotel.hotel_logo %}
+                            <img src="{{ hotel.hotel_logo.url }}" alt="Hotel Logo" class="h-32 w-32 rounded-lg object-cover border-4 border-blue-200 shadow-lg">
+                        {% else %}
+                            <div class="h-32 w-32 rounded-lg bg-gray-200 flex items-center justify-center text-gray-400 border-4 border-gray-300">
+                                <i class="fas fa-hotel text-4xl"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="text-lg font-semibold text-gray-900">{{ hotel.name }}</h4>
+                        <p class="text-gray-600 mt-1">Hotel Logo</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hotel Details -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Hotel Name -->
+                <div class="detail-group">
+                    <label class="detail-label">
+                        <i class="fas fa-hotel mr-2 text-blue-600"></i>Hotel Name
+                    </label>
+                    <div class="detail-value">{{ hotel.name }}</div>
+                </div>
+
+                <!-- Contact Email -->
+                <div class="detail-group">
+                    <label class="detail-label">
+                        <i class="fas fa-envelope mr-2 text-blue-600"></i>Contact Email
+                    </label>
+                    <div class="detail-value">
+                        <a href="mailto:{{ hotel.contact_email }}" class="text-blue-600 hover:text-blue-800 transition-colors">
+                            {{ hotel.contact_email }}
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Contact Phone -->
+                <div class="detail-group">
+                    <label class="detail-label">
+                        <i class="fas fa-phone mr-2 text-blue-600"></i>Contact Phone
+                    </label>
+                    <div class="detail-value">
+                        <a href="tel:{{ hotel.contact_phone }}" class="text-blue-600 hover:text-blue-800 transition-colors">
+                            {{ hotel.contact_phone }}
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Address -->
+                <div class="detail-group md:col-span-2">
+                    <label class="detail-label">
+                        <i class="fas fa-map-marker-alt mr-2 text-blue-600"></i>Address
+                    </label>
+                    <div class="detail-value">{{ hotel.address|linebreaks }}</div>
+                </div>
+
+                <!-- Description -->
+                {% if hotel.description %}
+                <div class="detail-group md:col-span-2">
+                    <label class="detail-label">
+                        <i class="fas fa-align-left mr-2 text-blue-600"></i>Description
+                    </label>
+                    <div class="detail-value">{{ hotel.description|linebreaks }}</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Hotel Statistics -->
+            <div class="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
+                <h3 class="text-lg font-semibold text-blue-900 mb-4 flex items-center">
+                    <i class="fas fa-chart-bar mr-2"></i>Hotel Statistics
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-green-100 text-green-600">
+                            <i class="fas fa-bed"></i>
+                        </div>
+                        <div>
+                            <div class="stat-value">{{ hotel.room_set.count }}</div>
+                            <div class="stat-label">Total Rooms</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-blue-100 text-blue-600">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div>
+                            <div class="stat-value">{{ hotel.room_set.filter|length }}</div>
+                            <div class="stat-label">Available Rooms</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 pt-8 mt-8 border-t border-gray-200">
+                {% if request.user.is_superuser %}
+                <a href="{% url 'admin_panel:hotel_edit' hotel.id %}" class="btn btn-primary flex-1 sm:flex-none">
+                    <i class="fas fa-edit mr-2"></i>Edit Hotel
+                </a>
+                {% endif %}
+                {% if request.user.is_superuser %}
+                <a href="{% url 'admin_panel:hotel_list' %}" class="btn btn-secondary flex-1 sm:flex-none">
+                    <i class="fas fa-list mr-2"></i>View All Hotels
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.detail-group {
+    margin-bottom: 1.5rem;
+}
+
+.detail-label {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.detail-value {
+    color: #1f2937;
+    font-size: 1rem;
+    line-height: 1.5;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+.stat-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 6px 8px -1px rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #f8fafc;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+</style>
+{% endblock %}

@@ -10,6 +10,38 @@ class GuestForm(forms.ModelForm):
     class Meta:
         model = Guest
         fields = ['first_name', 'last_name', 'email', 'phone']
+    
+    def clean_email(self):
+        """Validate email and check for duplicates"""
+        email = self.cleaned_data.get('email')
+        if email:
+            # Check if guest with this email already exists (excluding current instance if editing)
+            existing_guest = Guest.objects.filter(email=email)
+            if self.instance.pk:
+                existing_guest = existing_guest.exclude(pk=self.instance.pk)
+            
+            if existing_guest.exists():
+                raise forms.ValidationError(
+                    f"A guest with email '{email}' already exists. "
+                    "Please use a different email or update the existing guest record."
+                )
+        return email
+    
+    def clean_phone(self):
+        """Validate phone and check for duplicates"""
+        phone = self.cleaned_data.get('phone')
+        if phone:
+            # Check if guest with this phone already exists (excluding current instance if editing)
+            existing_guest = Guest.objects.filter(phone=phone)
+            if self.instance.pk:
+                existing_guest = existing_guest.exclude(pk=self.instance.pk)
+            
+            if existing_guest.exists():
+                raise forms.ValidationError(
+                    f"A guest with phone number '{phone}' already exists. "
+                    "Please use a different phone number or update the existing guest record."
+                )
+        return phone
 
 class RoomAmenityForm(forms.ModelForm):
     class Meta:

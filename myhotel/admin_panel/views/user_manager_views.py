@@ -10,10 +10,10 @@ from django.views.decorators.http import require_POST
 from django.urls import reverse
 from django.contrib.auth.forms import SetPasswordForm
 from django.utils.crypto import get_random_string
-
 from hotel.models import UserRole, Role
 from ..forms import AdminUserRegistrationForm, AdminUserEditForm, UserSearchForm
-from ..permission_decorators import require_section_access, require_permission, require_model_permission
+from ..permission_decorators import require_section_access, require_permission, require_model_permission, \
+    require_superuser
 
 
 @login_required
@@ -145,7 +145,7 @@ def user_manager_edit(request, user_id):
 
 
 @login_required
-@require_model_permission(User, 'delete', redirect_url='admin_panel:dashboard')
+@require_superuser
 def user_manager_delete(request, user_id):
     """Delete a user"""
     user = get_object_or_404(User, id=user_id)
