@@ -2,12 +2,14 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-
+from .views import home_redirect
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('hotel.urls')),
+    path('hotel/admin/', include('admin_panel.urls')),
+    path('', home_redirect, name='home'),
+    path('hotel/', include('hotel.urls')),
 ]
 
 if settings.DEBUG:

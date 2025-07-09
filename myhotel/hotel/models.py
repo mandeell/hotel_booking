@@ -2,8 +2,24 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.contrib.contenttypes.models import ContentType
+from .soft_delete import SoftDeleteModel
 
-class Hotel(models.Model):
+class UserProfile(models.Model):
+    """Extended user profile with additional fields"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.user.username}'s Profile"
+    
+    @property
+    def has_profile_picture(self):
+        return bool(self.profile_picture)
+
+class Hotel(SoftDeleteModel):
     name = models.CharField(max_length=200)
     address = models.TextField()
     contact_email = models.EmailField()
@@ -14,7 +30,7 @@ class Hotel(models.Model):
     def __str__(self):
         return self.name
 
-class HotelAmenity(models.Model):
+class HotelAmenity(SoftDeleteModel):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     icon_name = models.CharField(max_length=200, null=True, blank=True)
@@ -22,14 +38,14 @@ class HotelAmenity(models.Model):
     def __str__(self):
         return self.name
 
-class RoomAmenity(models.Model):
+class RoomAmenity(SoftDeleteModel):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
     icon_name = models.CharField(max_length=200, null=True, blank=True)
     def __str__(self):
         return self.name
 
-class RoomType(models.Model):
+class RoomType(SoftDeleteModel):
     name = models.CharField(max_length=200, unique=True)
     description = models.TextField()
     base_price = models.DecimalField(max_digits=20, decimal_places=2)
@@ -50,7 +66,7 @@ class RoomType(models.Model):
     def __str__(self):
         return self.name
 
-class Room(models.Model):
+class Room(SoftDeleteModel):
     hotel = models.ForeignKey(Hotel, on_delete=models.SET_NULL, null=True)
     room_type = models.ForeignKey(RoomType, on_delete=models.SET_NULL, null=True)
     room_number = models.CharField(max_length=10, unique=True)
@@ -59,7 +75,7 @@ class Room(models.Model):
     def __str__(self):
         return f'{self.room_type} - {self.room_number}'
 
-class Booking(models.Model):
+class Booking(SoftDeleteModel):
     room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True)
     checkin = models.DateField()
     checkout = models.DateField()
@@ -107,7 +123,7 @@ class Booking(models.Model):
     def __str__(self):
         return f"Booking for {self.room} - {self.checkin} to {self.checkout}"
 
-class Guest(models.Model):
+class Guest(SoftDeleteModel):
     booking = models.ForeignKey(Booking, on_delete=models.SET_NULL, null=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
@@ -126,3 +142,66 @@ class ContactForm(models.Model):
 
     def __str__(self):
         return f'{self.name} - {self.subject}'
+
+# Permission and Role Management Models
+class Permission(models.Model):
+    """Custom permission model for fine-grained access control"""
+    PERMISSION_TYPES = [
+        ('add', 'Add'),
+        ('view', 'View'),
+        ('edit', 'Edit'),
+        ('delete', 'Delete'),
+    ]
+    
+    name = models.CharField(max_length=200)
+    codename = models.CharField(max_length=100, unique=True)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name='custom_permissions')
+    permission_type = models.CharField(max_length=10, choices=PERMISSION_TYPES)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('content_type', 'permission_type')
+        ordering = ['content_type__model', 'permission_type']
+    
+    def __str__(self):
+        return f"{self.get_permission_type_display()} {self.content_type.model}"
+    
+    def save(self, *args, **kwargs):
+        if not self.name:
+            self.name = f"Can {self.get_permission_type_display().lower()} {self.content_type.model}"
+        if not self.codename:
+            self.codename = f"{self.permission_type}_{self.content_type.model}"
+        super().save(*args, **kwargs)
+
+class Role(models.Model):
+    """Role model to group permissions"""
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    permissions = models.ManyToManyField(Permission, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+    
+    def get_permission_codenames(self):
+        """Get list of permission codenames for this role"""
+        return list(self.permissions.values_list('codename', flat=True))
+
+class UserRole(models.Model):
+    """Many-to-many relationship between users and roles"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='assigned_roles')
+    
+    class Meta:
+        unique_together = ('user', 'role')
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.role.name}"

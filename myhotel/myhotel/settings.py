@@ -13,14 +13,15 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = True
 
 # ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.pythonanywhere.com']
-ALLOWED_HOSTS = ['94a5-102-90-102-220.ngrok-free.app', '127.0.0.1']
-CSRF_TRUSTED_ORIGINS = ['https://94a5-102-90-102-220.ngrok-free.app']
+ALLOWED_HOSTS = ['668e04491430.ngrok-free.app', '127.0.0.1']
+CSRF_TRUSTED_ORIGINS = ['https://668e04491430.ngrok-free.app']
 
 
 # Application definition
 
 INSTALLED_APPS = [
     'hotel.apps.HotelConfig',
+    'admin_panel.apps.AdminPanelConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -45,7 +46,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / 'hotel' / 'admin' / 'templates',
+            BASE_DIR / 'admin_panel' / 'templates',
             BASE_DIR / 'templates',
         ],
         'APP_DIRS': True,
@@ -55,6 +56,10 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'hotel.context_processors.settings_context',
+                'hotel.context_processors.hotel_context',
+                'hotel.breadcrumb_processor.breadcrumb_context',
+                'admin_panel.context_processors.user_initial_context',
+                'admin_panel.context_processors.user_permissions_context',
             ],
         },
     },
@@ -143,7 +148,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'hotel/static',
-    BASE_DIR / 'hotel/admin/static',
+    BASE_DIR / 'admin_panel/static',
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'  # for production
 

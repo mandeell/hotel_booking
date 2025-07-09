@@ -76,13 +76,7 @@ def submit_booking(request):
             logger.warning("Booking attempted without successful payment")
             return JsonResponse({'success': False, 'errors': 'Payment not verified'}, status=400)
 
-        guest = Guest.objects.create(
-            first_name=first_name,
-            last_name=last_name,
-            email=email,
-            phone=phone
-        )
-
+        # Create booking first
         booking = Booking(
             room=available_rooms.first(),
             checkin=checkin,
@@ -93,8 +87,16 @@ def submit_booking(request):
             status='confirmed',
             transaction_id=transaction_id
         )
-        booking.guest = guest
         booking.save()
+
+        # Create guest and associate with booking
+        guest = Guest.objects.create(
+            booking=booking,
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            phone=phone
+        )
 
         logger.info(f"Booking created: ID {booking.id} for {guest.email}, transaction_id={transaction_id}")
         return JsonResponse({'success': True, 'booking_id': booking.id})
@@ -116,37 +118,92 @@ def submit_booking(request):
 @csrf_exempt
 def verify_payment(request):
     try:
-        raw_body = request.body.decode('utf-8')
-        logger.debug(f"Raw request body: {raw_body}")
-        data = json.loads(raw_body)
-        reference = data.get('reference')
-        logger.debug(f"Extracted reference: {reference}")
+        # Enhanced logging for debugging
+        logger.error(f"=== VERIFY PAYMENT START ===")
+        logger.error(f"Request method: {request.method}")
+        logger.error(f"Request headers: {dict(request.headers)}")
+        logger.error(f"Request content type: {request.content_type}")
+        
+        # Handle different request formats
+        reference = None
+        data = {}
+        
+        # Try to get data from request body first
+        if hasattr(request, 'body') and request.body:
+            try:
+                raw_body = request.body.decode('utf-8')
+                logger.error(f"Raw request body: {raw_body}")
+                
+                if raw_body.strip():
+                    data = json.loads(raw_body)
+                    reference = data.get('reference')
+                    logger.error(f"Extracted reference from body: {reference}")
+            except (UnicodeDecodeError, json.JSONDecodeError) as e:
+                logger.error(f"Error parsing request body: {str(e)}")
+        
+        # Fallback to POST data if body parsing failed
+        if not reference and request.POST:
+            logger.error(f"Trying POST data: {dict(request.POST)}")
+            reference = request.POST.get('reference')
+            logger.error(f"Extracted reference from POST: {reference}")
+        
+        # Fallback to GET data if still no reference
+        if not reference and request.GET:
+            logger.error(f"Trying GET data: {dict(request.GET)}")
+            reference = request.GET.get('reference')
+            logger.error(f"Extracted reference from GET: {reference}")
 
         if not reference:
-            logger.warning("Missing reference")
+            logger.error("Missing reference in request data")
+            logger.error(f"POST data: {dict(request.POST)}")
+            logger.error(f"GET data: {dict(request.GET)}")
+            logger.error(f"Body data: {data}")
             return JsonResponse({'status': 'error', 'message': 'Missing reference'}, status=400)
+
+        # Check if Paystack secret key is configured
+        if not hasattr(settings, 'PAYSTACK_SECRET_KEY') or not settings.PAYSTACK_SECRET_KEY:
+            logger.error("PAYSTACK_SECRET_KEY not configured")
+            return JsonResponse({'status': 'error', 'message': 'Payment system not configured'}, status=500)
 
         headers = {
             'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}',
             'Content-Type': 'application/json'
         }
-        logger.debug(f"Sending verification request to Paystack with headers: {headers}")
-        response = requests.get(
-            f'https://api.paystack.co/transaction/verify/{reference}',
-            headers=headers
-        )
-        response_data = response.json()
-        logger.debug(f"Paystack response: status_code={response.status_code}, data={response_data}")
+        logger.error(f"Sending verification request to Paystack for reference: {reference}")
+        
+        try:
+            response = requests.get(
+                f'https://api.paystack.co/transaction/verify/{reference}',
+                headers=headers,
+                timeout=30
+            )
+        except requests.RequestException as e:
+            logger.error(f"Network error verifying payment: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': f'Network error: {str(e)}'}, status=500)
+        
+        try:
+            response_data = response.json()
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON response from Paystack: {response.text}")
+            return JsonResponse({'status': 'error', 'message': 'Invalid response from payment provider'}, status=500)
+        
+        logger.error(f"Paystack response: status_code={response.status_code}, data={response_data}")
 
         if response.status_code == 200 and response_data.get('status') and response_data.get('data', {}).get('status') == 'success':
-            expected_amount = Decimal(request.session.get('expected_amount', '0'))  # Already in Naira
+            expected_amount = request.session.get('expected_amount')
+            logger.error(f"Session expected_amount: {expected_amount}")
+            
+            if not expected_amount:
+                logger.error("No expected amount in session")
+                return JsonResponse({'status': 'error', 'message': 'Session expired. Please try again.'}, status=400)
+            
+            expected_amount = Decimal(expected_amount)  # Already in Naira
             paid_amount = Decimal(response_data['data']['amount']) / 100  # Convert kobo to Naira
-            logger.debug(f"Session data: {request.session.items()}")
-            logger.debug(f"Comparing amounts: expected={expected_amount}, paid={paid_amount}, raw_paid_amount={response_data['data']['amount']}")
+            logger.error(f"Comparing amounts: expected={expected_amount}, paid={paid_amount}, raw_paid_amount={response_data['data']['amount']}")
 
             if abs(paid_amount - expected_amount) > Decimal('0.01'):  # Allow small rounding differences
-                logger.warning(f"Amount mismatch: expected {expected_amount}, paid {paid_amount}, raw_paid_amount={response_data['data']['amount']}")
-                return JsonResponse({'status': 'error', 'message': 'Payment amount mismatch'}, status=400)
+                logger.error(f"Amount mismatch: expected {expected_amount}, paid {paid_amount}")
+                return JsonResponse({'status': 'error', 'message': f'Payment amount mismatch. Expected: ₦{expected_amount}, Paid: ₦{paid_amount}'}, status=400)
 
             request.session['payment_status'] = 'success'
             request.session['transaction_id'] = response_data['data']['id']
@@ -159,25 +216,27 @@ def verify_payment(request):
                 'payment_status': 'success'
             })
         else:
-            logger.warning(f"Payment verification failed: reference={reference}, response: {response_data}")
-            return JsonResponse({'status': 'failed', 'message': 'Payment verification failed'}, status=400)
+            logger.error(f"Payment verification failed: reference={reference}, response: {response_data}")
+            error_message = 'Payment verification failed'
+            if response_data.get('message'):
+                error_message = response_data['message']
+            return JsonResponse({'status': 'failed', 'message': error_message}, status=400)
 
-    except json.JSONDecodeError as e:
-        logger.error(f"JSON decode error: {str(e)}, raw_body={request.body}")
-        return JsonResponse({'status': 'error', 'message': f'Invalid JSON payload: {str(e)}'}, status=400)
-    except requests.RequestException as e:
-        logger.error(f"Network error verifying payment: {str(e)}")
-        return JsonResponse({'status': 'error', 'message': f'Network error: {str(e)}'}, status=400)
     except Exception as e:
-        logger.error(f"Error verifying payment: {str(e)}")
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+        logger.error(f"Unexpected error verifying payment: {str(e)}", exc_info=True)
+        return JsonResponse({'status': 'error', 'message': f'Unexpected error: {str(e)}'}, status=500)
 
 @require_POST
 @csrf_exempt
 def store_expected_amount(request):
     try:
-        data = json.loads(request.body)
-        amount = data.get('amount')
+        # Handle both JSON and form data
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+            amount = data.get('amount')
+        else:
+            amount = request.POST.get('amount')
+            
         if not amount or float(amount) <= 0:
             logger.warning("Invalid amount provided")
             return JsonResponse({'success': False, 'errors': 'Invalid amount'}, status=400)

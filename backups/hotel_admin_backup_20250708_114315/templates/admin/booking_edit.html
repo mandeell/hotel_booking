@@ -1,0 +1,376 @@
+{% extends 'admin/base_site.html' %}
+{% load static %}
+
+{% block content %}
+<div class="w-full max-w-full py-4 px-2 md:py-8 md:px-4">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Edit Booking</h1>
+            <p class="text-gray-600 mt-1">Update booking details and room assignment</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'admin_bookings' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Bookings
+            </a>
+        </div>
+    </div>
+
+    <!-- Form Container -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden max-w-2xl mx-auto">
+        <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4">
+            <h2 class="text-xl font-semibold text-white flex items-center">
+                <i class="fas fa-calendar-check mr-3"></i>Booking Information
+            </h2>
+        </div>
+        
+        <!-- Booking Constraints Info -->
+        <div class="p-6 bg-blue-50 border-b border-blue-200">
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-info-circle text-blue-600"></i>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold text-blue-900 mb-1">Booking Duration Constraint</h4>
+                    <p class="text-blue-800 text-sm">
+                        This booking was paid for <strong>{{ original_days }} day{{ original_days|pluralize }}</strong>. 
+                        You can change the check-in and check-out dates, but the total duration cannot exceed {{ original_days }} day{{ original_days|pluralize }}.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <form id="editBookingForm" method="post" data-booking-id="{{ booking.id }}" data-original-days="{{ original_days }}" class="p-6 md:p-8">
+            {% csrf_token %}
+            
+            <!-- Room Selection -->
+            <div class="form-group mb-6">
+                <label for="roomSelect" class="block text-sm font-semibold text-gray-700 mb-2">
+                    Room Assignment
+                    <span class="text-red-500 ml-1">*</span>
+                </label>
+                <div class="relative">
+                    <select name="room" id="roomSelect" class="form-control appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 pr-8 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200 w-full" required>
+                        {% for room in available_rooms %}
+                            <option value="{{ room.id }}" {% if room.id == booking.room.id %}selected{% endif %}>
+                                Room {{ room.room_number }} - {{ room.room_type.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <i class="fas fa-chevron-down text-sm"></i>
+                    </div>
+                </div>
+                <p class="mt-1 text-sm text-gray-500">Select an available room for this booking</p>
+            </div>
+
+            <!-- Date Fields -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Check-in Date -->
+                <div class="form-group">
+                    <label for="checkinInput" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Check-in Date
+                        <span class="text-red-500 ml-1">*</span>
+                    </label>
+                    <div class="relative">
+                        <input type="date" name="checkin" id="checkinInput" 
+                               class="form-control w-full border border-gray-300 rounded-lg px-4 py-3 pl-10 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200" 
+                               value="{{ booking.checkin|date:'Y-m-d' }}" required />
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-calendar-alt text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Check-out Date -->
+                <div class="form-group">
+                    <label for="checkoutInput" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Check-out Date
+                        <span class="text-red-500 ml-1">*</span>
+                    </label>
+                    <div class="relative">
+                        <input type="date" name="checkout" id="checkoutInput" 
+                               class="form-control w-full border border-gray-300 rounded-lg px-4 py-3 pl-10 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-200" 
+                               value="{{ booking.checkout|date:'Y-m-d' }}" required />
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-calendar-alt text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Duration Display -->
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-sm font-medium text-gray-700">Selected Duration:</span>
+                        <span id="selectedDuration" class="ml-2 font-semibold text-indigo-600">{{ original_days }} day{{ original_days|pluralize }}</span>
+                    </div>
+                    <div>
+                        <span class="text-sm font-medium text-gray-700">Paid For:</span>
+                        <span class="ml-2 font-semibold text-green-600">{{ original_days }} day{{ original_days|pluralize }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Availability Feedback -->
+            <div id="availability-feedback" class="mb-6"></div>
+
+            <!-- Booking Summary Card -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                    <i class="fas fa-info-circle mr-2 text-indigo-500"></i>Current Booking Summary
+                </h3>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-600">Booking ID:</span>
+                        <span class="font-medium ml-2">#{{ booking.id }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Status:</span>
+                        <span class="ml-2 px-2 py-1 rounded text-xs font-semibold 
+                            {% if booking.status == 'confirmed' %}bg-green-100 text-green-800
+                            {% elif booking.status == 'pending' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ booking.status|capfirst }}
+                        </span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Guests:</span>
+                        <span class="font-medium ml-2">{{ booking.guests }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Total Price:</span>
+                        <span class="font-medium ml-2">₦{{ booking.total_price }}</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Transaction ID:</span>
+                        <span class="font-medium ml-2 text-xs">{{ booking.transaction_id|default:"N/A" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
+                <button type="submit" class="btn btn-primary flex-1 sm:flex-none" id="saveButton">
+                    <i class="fas fa-save mr-2"></i>Save Changes
+                </button>
+                <a href="{% url 'admin_bookings' %}" class="btn btn-secondary flex-1 sm:flex-none">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.form-group label {
+    font-weight: 600;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    box-shadow: 0 6px 8px -1px rgba(99, 102, 241, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-secondary {
+    background: #f8fafc;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+#availability-feedback.success {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+}
+
+#availability-feedback.error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+}
+
+#availability-feedback.warning {
+    background: #fffbeb;
+    border: 1px solid #fed7aa;
+    color: #d97706;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('editBookingForm');
+    const roomSelect = document.getElementById('roomSelect');
+    const checkinInput = document.getElementById('checkinInput');
+    const checkoutInput = document.getElementById('checkoutInput');
+    const feedbackDiv = document.getElementById('availability-feedback');
+    const saveButton = document.getElementById('saveButton');
+    const selectedDurationSpan = document.getElementById('selectedDuration');
+    const originalDays = parseInt(form.dataset.originalDays);
+
+    function updateDurationDisplay() {
+        const checkin = checkinInput.value;
+        const checkout = checkoutInput.value;
+        
+        if (checkin && checkout) {
+            const checkinDate = new Date(checkin);
+            const checkoutDate = new Date(checkout);
+            const daysDiff = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
+            
+            if (daysDiff > 0) {
+                selectedDurationSpan.textContent = `${daysDiff} day${daysDiff !== 1 ? 's' : ''}`;
+                
+                if (daysDiff > originalDays) {
+                    selectedDurationSpan.className = 'ml-2 font-semibold text-red-600';
+                } else if (daysDiff === originalDays) {
+                    selectedDurationSpan.className = 'ml-2 font-semibold text-green-600';
+                } else {
+                    selectedDurationSpan.className = 'ml-2 font-semibold text-blue-600';
+                }
+            } else {
+                selectedDurationSpan.textContent = 'Invalid dates';
+                selectedDurationSpan.className = 'ml-2 font-semibold text-red-600';
+            }
+        }
+    }
+
+    async function checkRoomAvailability() {
+        const roomId = roomSelect.value;
+        const checkin = checkinInput.value;
+        const checkout = checkoutInput.value;
+        const bookingId = form.dataset.bookingId || '';
+        
+        if (!roomId || !checkin || !checkout) {
+            feedbackDiv.innerHTML = '';
+            feedbackDiv.className = '';
+            saveButton.disabled = false;
+            return true;
+        }
+
+        // Check days constraint first
+        const checkinDate = new Date(checkin);
+        const checkoutDate = new Date(checkout);
+        const daysDiff = Math.ceil((checkoutDate - checkinDate) / (1000 * 60 * 60 * 24));
+        
+        if (daysDiff <= 0) {
+            feedbackDiv.innerHTML = `<div class="flex items-center"><i class="fas fa-exclamation-triangle mr-2"></i>Check-out date must be after check-in date.</div>`;
+            feedbackDiv.className = 'error';
+            saveButton.disabled = true;
+            return false;
+        }
+        
+        if (daysDiff > originalDays) {
+            feedbackDiv.innerHTML = `<div class="flex items-center"><i class="fas fa-exclamation-triangle mr-2"></i>Cannot extend booking beyond ${originalDays} days already paid for. Selected duration is ${daysDiff} days.</div>`;
+            feedbackDiv.className = 'error';
+            saveButton.disabled = true;
+            return false;
+        }
+
+        feedbackDiv.innerHTML = '<div class="flex items-center"><i class="fas fa-spinner fa-spin mr-2"></i>Checking room availability...</div>';
+        feedbackDiv.className = 'warning';
+        saveButton.disabled = true;
+        
+        try {
+            const resp = await fetch(`/hotel/admin/api/check-room-availability/?room_id=${roomId}&checkin=${checkin}&checkout=${checkout}&booking_id=${bookingId}`);
+            
+            if (!resp.ok) {
+                throw new Error(`HTTP error! status: ${resp.status}`);
+            }
+            
+            const data = await resp.json();
+            
+            if (data.available) {
+                feedbackDiv.innerHTML = '<div class="flex items-center"><i class="fas fa-check-circle mr-2"></i>Room is available for the selected dates.</div>';
+                feedbackDiv.className = 'success';
+                saveButton.disabled = false;
+                return true;
+            } else {
+                feedbackDiv.innerHTML = `<div class="flex items-center"><i class="fas fa-times-circle mr-2"></i>Room is NOT available for the selected dates.${data.error ? ' ' + data.error : ''}</div>`;
+                feedbackDiv.className = 'error';
+                saveButton.disabled = true;
+                return false;
+            }
+        } catch (e) {
+            console.error('Availability check error:', e);
+            feedbackDiv.innerHTML = '<div class="flex items-center"><i class="fas fa-exclamation-triangle mr-2"></i>Error checking availability. Please try again.</div>';
+            feedbackDiv.className = 'error';
+            saveButton.disabled = true;
+            return false;
+        }
+    }
+
+    // Event listeners
+    roomSelect.addEventListener('change', () => {
+        updateDurationDisplay();
+        checkRoomAvailability();
+    });
+    
+    checkinInput.addEventListener('change', () => {
+        updateDurationDisplay();
+        checkRoomAvailability();
+    });
+    
+    checkoutInput.addEventListener('change', () => {
+        updateDurationDisplay();
+        checkRoomAvailability();
+    });
+
+    form.addEventListener('submit', async function (e) {
+        const available = await checkRoomAvailability();
+        if (!available) {
+            e.preventDefault();
+            alert('Please resolve the availability issues before saving.');
+        }
+    });
+
+    // Initial checks
+    updateDurationDisplay();
+    checkRoomAvailability();
+});
+</script>
+{% endblock %}

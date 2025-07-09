@@ -17,3 +17,13 @@ def replace(value, arg):
         # Replace all spaces with hyphens for Font Awesome icon names
         return value.replace(' ', '-')
     return value.replace(old, new)
+
+@register.filter
+def add_class(field, css_class):
+    """
+    Adds CSS classes to form fields.
+    Usage: {{ field|add_class:"form-control" }}
+    """
+    if hasattr(field, 'as_widget'):
+        return field.as_widget(attrs={'class': css_class})
+    return field

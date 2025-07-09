@@ -1,0 +1,304 @@
+{% extends 'admin_panel/base_site.html' %}
+{% load permission_tags %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-sm p-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden">
+                    {% if user.profile.profile_picture %}
+                        <img src="{{ user.profile.profile_picture.url }}" alt="Profile Picture" class="w-full h-full object-cover rounded-full">
+                    {% else %}
+                        <div class="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                            {% if user.first_name %}{{ user.first_name.0|upper }}{% elif user.username %}{{ user.username.0|upper }}{% else %}U{% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div>
+                    <h2 class="text-xl md:text-2xl font-bold text-blue-800">
+                        {{ user.get_full_name|default:user.username }}
+                        {% if user.is_superuser %}
+                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                <i class="fas fa-crown mr-1"></i>Superuser
+                            </span>
+                        {% endif %}
+                    </h2>
+                    <p class="text-gray-600 mt-1">@{{ user.username }}</p>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <a href="{% url 'admin_panel:user_manager_list' %}" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to List</span>
+                </a>
+                {% if request.user.is_superuser or request.user|has_perm:"edit_user" %}
+                <a href="{% url 'admin_panel:user_manager_edit' user.id %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                    <i class="fas fa-edit"></i>
+                    <span>Edit User</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- User Information -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Personal Information -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-user mr-2"></i>Personal Information
+            </h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Username</label>
+                    <p class="mt-1 text-sm text-gray-900">{{ user.username }}</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Full Name</label>
+                    <p class="mt-1 text-sm text-gray-900">
+                        {% if user.get_full_name %}
+                            {{ user.get_full_name }}
+                        {% else %}
+                            <span class="text-gray-500">Not provided</span>
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email Address</label>
+                    <p class="mt-1 text-sm text-gray-900">
+                        {% if user.email %}
+                            {{ user.email }}
+                        {% else %}
+                            <span class="text-gray-500">Not provided</span>
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Account Status</label>
+                    <div class="mt-1 flex items-center gap-2">
+                        {% if user.is_active %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-check-circle mr-1"></i>Active
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <i class="fas fa-times-circle mr-1"></i>Inactive
+                            </span>
+                        {% endif %}
+                        
+                        {% if user.is_staff %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <i class="fas fa-user-cog mr-1"></i>Staff
+                            </span>
+                        {% endif %}
+                        
+                        {% if user.is_superuser %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                <i class="fas fa-crown mr-1"></i>Superuser
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Member Since</label>
+                    <p class="mt-1 text-sm text-gray-900">{{ user.date_joined|date:"F d, Y" }}</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Last Login</label>
+                    <p class="mt-1 text-sm text-gray-900">
+                        {% if user.last_login %}
+                            {{ user.last_login|date:"F d, Y g:i A" }}
+                        {% else %}
+                            <span class="text-gray-500">Never</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Role Information -->
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">
+                    <i class="fas fa-user-shield mr-2"></i>Assigned Roles
+                </h3>
+                {% if request.user.is_superuser or request.user|has_perm:"assign_roles" %}
+                <button onclick="toggleRoleAssignment()" class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-plus mr-1"></i>Assign Role
+                </button>
+                {% endif %}
+            </div>
+            
+            <!-- Role Assignment Form (Hidden by default) -->
+            {% if request.user.is_superuser or request.user|has_perm:"assign_roles" %}
+            <div id="roleAssignmentForm" class="hidden mb-4 p-4 bg-gray-50 rounded-lg">
+                <form method="post" action="{% url 'admin_panel:user_manager_assign_role' user.id %}">
+                    {% csrf_token %}
+                    <div class="flex gap-2">
+                        <select name="role" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Select a role...</option>
+                            {% for role in available_roles %}
+                                <option value="{{ role.id }}">{{ role.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                            Assign
+                        </button>
+                        <button type="button" onclick="toggleRoleAssignment()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+            
+            {% if user_roles %}
+                <div class="space-y-4">
+                    {% for user_role in user_roles %}
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-medium text-gray-900">{{ user_role.role.name }}</h4>
+                                <div class="flex items-center gap-2">
+                                    {% if user_role.role.is_active %}
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            Active
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            Inactive
+                                        </span>
+                                    {% endif %}
+                                    {% if request.user.is_superuser or request.user|has_perm:"assign_roles" %}
+                                    <form method="post" action="{% url 'admin_panel:user_manager_remove_role' user.id user_role.role.id %}" class="inline">
+                                        {% csrf_token %}
+                                        <button type="button" class="text-red-600 hover:text-red-800 text-sm" 
+                                                onclick="showRoleRemoveModal('{{ user.username }}', '{{ user_role.role.name }}', function() { this.closest('form').submit(); }.bind(this))">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            {% if user_role.role.description %}
+                                <p class="text-sm text-gray-600 mb-2">{{ user_role.role.description }}</p>
+                            {% endif %}
+                            
+                            <div class="text-xs text-gray-500">
+                                <p>Assigned: {{ user_role.assigned_at|date:"M d, Y" }}</p>
+                                {% if user_role.assigned_by %}
+                                    <p>By: {{ user_role.assigned_by.get_full_name|default:user_role.assigned_by.username }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mt-2">
+                                <p class="text-xs font-medium text-gray-700 mb-1">Permissions ({{ user_role.role.permissions.count }}):</p>
+                                <div class="flex flex-wrap gap-1">
+                                    {% for permission in user_role.role.permissions.all|slice:":5" %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                            {{ permission.name|truncatechars:20 }}
+                                        </span>
+                                    {% endfor %}
+                                    {% if user_role.role.permissions.count > 5 %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                            +{{ user_role.role.permissions.count|add:"-5" }} more
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-user-slash text-gray-400 text-3xl mb-3"></i>
+                    <p class="text-gray-500">No roles assigned</p>
+                    <p class="text-sm text-gray-400">Assign roles to grant permissions to this user.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="bg-white rounded-lg shadow-sm p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            <i class="fas fa-cogs mr-2"></i>User Actions
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {% if request.user.is_superuser or request.user|has_perm:"edit_user" %}
+            <a href="{% url 'admin_panel:user_manager_edit' user.id %}" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <i class="fas fa-edit text-blue-600 text-xl mr-3"></i>
+                <div>
+                    <p class="font-medium text-gray-900">Edit User</p>
+                    <p class="text-sm text-gray-500">Modify user information</p>
+                </div>
+            </a>
+            {% endif %}
+
+            {% if request.user.is_superuser or request.user|has_perm:"edit_user" and not user.is_superuser or user == request.user %}
+            <a href="{% url 'admin_panel:user_manager_reset_password' user.id %}" onclick="return showConfirmation('Reset Password', 'Are you sure you want to reset the password for {{ user.username }}?', function() { return true; }, {type: 'warning', confirmText: 'Reset'})" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-yellow-50 transition-colors">
+                <i class="fas fa-key text-yellow-600 text-xl mr-3"></i>
+                <div>
+                    <p class="font-medium text-gray-900">Reset Password</p>
+                    <p class="text-sm text-gray-500">Set a new password</p>
+                </div>
+            </a>
+            {% endif %}
+
+            {% if request.user.is_superuser or request.user|has_perm:"edit_user" and not user.is_superuser %}
+            <form method="post" action="{% url 'admin_panel:user_manager_generate_password' user.id %}" class="block" id="generatePasswordForm">
+                {% csrf_token %}
+                <button type="button" class="w-full flex items-center p-4 border border-gray-200 rounded-lg hover:bg-purple-50 transition-colors text-left"
+                        onclick="showConfirmation('Generate Password', 'Generate a random password for {{ user.username }}? The new password will be displayed once.', function() { document.getElementById('generatePasswordForm').submit(); }, {type: 'warning', confirmText: 'Generate'})">
+                    <i class="fas fa-random text-purple-600 text-xl mr-3"></i>
+                    <div>
+                        <p class="font-medium text-gray-900">Generate Password</p>
+                        <p class="text-sm text-gray-500">Create random password</p>
+                    </div>
+                </button>
+            </form>
+            {% endif %}
+
+            {% if request.user.is_superuser or request.user|has_perm:"manage_user_status" and not user.is_superuser and user != request.user %}     
+            <form method="post" action="{% url 'admin_panel:user_manager_toggle_status' user.id %}" class="block" id="userStatusForm">
+                {% csrf_token %}
+                <button type="button" class="w-full flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                        onclick="showUserStatusModal('{{ user.username }}', {{ user.is_active|yesno:'true,false' }}, function() { document.getElementById('userStatusForm').submit(); })">
+                    <i class="fas {% if user.is_active %}fa-user-slash text-orange-600{% else %}fa-user-check text-green-600{% endif %} text-xl mr-3"></i>
+                    <div>
+                        <p class="font-medium text-gray-900">{% if user.is_active %}Deactivate{% else %}Activate{% endif %} User</p>
+                        <p class="text-sm text-gray-500">{% if user.is_active %}Disable user access{% else %}Enable user access{% endif %}</p>      
+                    </div>
+                </button>
+            </form>
+            {% endif %}
+
+            {% if request.user.is_superuser or request.user|has_perm:"delete_user" and not user.is_superuser and user != request.user %}
+            <a href="{% url 'admin_panel:user_manager_delete' user.id %}" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-red-50 transition-colors">
+                <i class="fas fa-trash text-red-600 text-xl mr-3"></i>
+                <div>
+                    <p class="font-medium text-gray-900">Delete User</p>
+                    <p class="text-sm text-gray-500">Permanently remove user</p>
+                </div>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleRoleAssignment() {
+    const form = document.getElementById('roleAssignmentForm');
+    form.classList.toggle('hidden');
+}
+</script>
+{% endblock %}

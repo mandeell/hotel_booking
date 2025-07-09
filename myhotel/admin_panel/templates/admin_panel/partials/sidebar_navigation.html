@@ -1,0 +1,130 @@
+{% load permission_tags %}
+
+<!-- Dashboard -->
+<a href="{% url 'admin_panel:dashboard' %}" class="sidebar-item group flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 font-medium">
+    <i class="fas fa-tachometer-alt text-gray-400 group-hover:text-blue-600 transition-colors"></i> 
+    <span class="sidebar-item-text">Dashboard</span>
+</a>
+
+<!-- Bookings -->
+{% if request.user|has_section_access_filter:"booking" %}
+<a href="{% url 'admin_panel:admin_bookings' %}" class="sidebar-item group flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 font-medium">
+    <i class="fas fa-calendar-check text-gray-400 group-hover:text-blue-600 transition-colors"></i> 
+    <span class="sidebar-item-text">Bookings</span>
+</a>
+{% endif %}
+
+<!-- Guests -->
+{% if request.user|has_section_access_filter:"guest" %}
+<a href="{% url 'admin_panel:admin_guests' %}" class="sidebar-item group flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 font-medium">
+    <i class="fas fa-user-friends text-gray-400 group-hover:text-blue-600 transition-colors"></i>
+    <span class="sidebar-item-text">Guests</span>
+</a>
+{% endif %}
+
+<!-- Setup Dropdown -->
+{% if request.user|has_section_access_filter:"room_setup" or request.user|has_section_access_filter:"hotel_setup" %}
+<div class="dropdown">
+    <button class="dropdown-toggle sidebar-item group flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 font-medium" data-dropdown="setup">
+        <div class="flex items-center gap-3">
+            <i class="fas fa-cogs text-gray-400 group-hover:text-blue-600 transition-colors"></i>
+            <span class="sidebar-item-text">Setup</span>
+        </div>
+        <i class="fas fa-chevron-down dropdown-arrow sidebar-item-text text-gray-400 group-hover:text-blue-600 transition-all text-sm"></i>
+    </button>
+    <div class="dropdown-menu ml-6 mt-1 space-y-1" id="setup-menu">
+        <!-- Room Setup -->
+        {% if request.user|has_section_access_filter:"room_setup" %}
+        <div class="dropdown">
+            <button class="dropdown-toggle sidebar-item group flex items-center justify-between w-full px-3 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200" data-dropdown="room-setup">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-bed text-sm text-gray-400 group-hover:text-blue-600 transition-colors"></i>
+                    <span class="sidebar-item-text text-sm">Room Setup</span>
+                </div>
+                <i class="fas fa-chevron-down dropdown-arrow sidebar-item-text text-gray-400 group-hover:text-blue-600 transition-all text-xs"></i>
+            </button>
+            <div class="dropdown-menu ml-6 mt-1 space-y-1" id="room-setup-menu">
+                {% if request.user|has_perm:"view_roomtype" %}
+                <a href="{% url 'admin_panel:admin_room_types' %}" class="sidebar-item group flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200">
+                    <i class="fas fa-th-list text-xs text-gray-400 group-hover:text-blue-600 transition-colors"></i>
+                    <span class="sidebar-item-text text-sm">Room Types</span>
+                </a>
+                {% endif %}
+                {% if request.user|has_perm:"view_room" %}
+                <a href="{% url 'admin_panel:admin_rooms' %}" class="sidebar-item group flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200">
+                    <i class="fas fa-door-open text-xs text-gray-400 group-hover:text-blue-600 transition-colors"></i>
+                    <span class="sidebar-item-text text-sm">Rooms</span>
+                </a>
+                {% endif %}
+                {% if request.user|has_perm:"view_roomamenity" %}
+                <a href="{% url 'admin_panel:admin_room_amenities' %}" class="sidebar-item group flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200">
+                    <i class="fas fa-couch text-xs text-gray-400 group-hover:text-blue-600 transition-colors"></i>
+                    <span class="sidebar-item-text text-sm">Room Amenities</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Hotel Setup -->
+        {% if request.user|has_section_access_filter:"hotel_setup" %}
+        <div class="dropdown">
+            <button class="dropdown-toggle sidebar-item group flex items-center justify-between w-full px-3 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200" data-dropdown="hotel-setup">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-building text-sm text-gray-400 group-hover:text-blue-600 transition-colors"></i>
+                    <span class="sidebar-item-text text-sm">Hotel Setup</span>
+                </div>
+                <i class="fas fa-chevron-down dropdown-arrow sidebar-item-text text-gray-400 group-hover:text-blue-600 transition-all text-xs"></i>
+            </button>
+            <div class="dropdown-menu ml-6 mt-1 space-y-1" id="hotel-setup-menu">
+                {% if request.user|has_perm:"view_hotel" %}
+                <a href="{% url 'admin_panel:hotel_detail' hotel_id=1 %}" class="sidebar-item group flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200">
+                    <i class="fas fa-hotel text-xs text-gray-400 group-hover:text-blue-600 transition-colors"></i>
+                    <span class="sidebar-item-text text-sm">Hotel</span>
+                </a>
+                {% endif %}
+                {% if request.user|has_perm:"view_hotelamenity" %}
+                <a href="{% url 'admin_panel:admin_hotel_amenities' %}" class="sidebar-item group flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200">
+                    <i class="fas fa-concierge-bell text-xs text-gray-400 group-hover:text-blue-600 transition-colors"></i>
+                    <span class="sidebar-item-text text-sm">Hotel Amenities</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Account Dropdown -->
+{% if request.user|has_section_access_filter:"account" %}
+<div class="dropdown">
+    <button class="dropdown-toggle sidebar-item group flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 font-medium" data-dropdown="account">
+        <div class="flex items-center gap-3">
+            <i class="fas fa-user-cog text-gray-400 group-hover:text-blue-600 transition-colors"></i>
+            <span class="sidebar-item-text">Account</span>
+        </div>
+        <i class="fas fa-chevron-down dropdown-arrow sidebar-item-text text-gray-400 group-hover:text-blue-600 transition-all text-sm"></i>
+    </button>
+    <div class="dropdown-menu ml-6 mt-1 space-y-1" id="account-menu">
+        {% if request.user|has_perm:"access_user_manager" %}
+        <a href="{% url 'admin_panel:user_manager_list' %}" class="sidebar-item group flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200">
+            <i class="fas fa-users text-sm text-gray-400 group-hover:text-blue-600 transition-colors"></i>
+            <span class="sidebar-item-text text-sm">User Manager</span>
+        </a>
+        {% endif %}
+        {% if request.user|has_perm:"view_permission" %}
+        <a href="{% url 'admin_panel:admin_permissions' %}" class="sidebar-item group flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200">
+            <i class="fas fa-shield-alt text-sm text-gray-400 group-hover:text-blue-600 transition-colors"></i>
+            <span class="sidebar-item-text text-sm">Permission Manager</span>
+        </a>
+        {% endif %}
+        {% if request.user|has_perm:"view_role" %}
+        <a href="{% url 'admin_panel:admin_roles' %}" class="sidebar-item group flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200">
+            <i class="fas fa-user-shield text-sm text-gray-400 group-hover:text-blue-600 transition-colors"></i>
+            <span class="sidebar-item-text text-sm">Role Manager</span>
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}

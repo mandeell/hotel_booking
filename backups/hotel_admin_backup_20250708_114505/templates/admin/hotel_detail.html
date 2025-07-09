@@ -1,0 +1,181 @@
+{% extends 'admin/base_site.html' %}
+{% load static %}
+
+{% block content %}
+<div class="w-full max-w-full py-4 px-2 md:py-8 md:px-4">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Hotel Management</h1>
+            <p class="text-gray-600 mt-1">Manage your hotel information and settings</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Form Container -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden max-w-4xl mx-auto">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+            <h2 class="text-xl font-semibold text-white flex items-center">
+                <i class="fas fa-hotel mr-3"></i>Hotel Information
+            </h2>
+        </div>
+        
+        <form method="post" enctype="multipart/form-data" class="p-6 md:p-8">
+            {% csrf_token %}
+            
+            <!-- Hotel Logo Section -->
+            <div class="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-image mr-2 text-blue-600"></i>Hotel Logo
+                </h3>
+                <div class="flex flex-col md:flex-row items-start gap-6">
+                    <div class="flex-shrink-0">
+                        {% if hotel.hotel_logo %}
+                            <img src="{{ hotel.hotel_logo.url }}" alt="Hotel Logo" class="h-24 w-24 rounded-full object-cover border-4 border-blue-200 shadow-lg">
+                        {% else %}
+                            <div class="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 border-4 border-gray-300">
+                                <i class="fas fa-hotel text-2xl"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Upload New Logo</label>
+                        <input type="file" name="hotel_logo" accept="image/*" class="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                        <p class="mt-1 text-sm text-gray-500">PNG, JPG or JPEG (MAX. 5MB). Recommended size: 200x200px</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hotel Details -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Hotel Name -->
+                <div class="form-group">
+                    <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Hotel Name <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="name" id="name" value="{{ form.name.value|default:hotel.name }}" 
+                           class="form-control w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200" required />
+                </div>
+
+                <!-- Contact Email -->
+                <div class="form-group">
+                    <label for="contact_email" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Contact Email <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <input type="email" name="contact_email" id="contact_email" value="{{ form.contact_email.value|default:hotel.contact_email }}" 
+                               class="form-control w-full border border-gray-300 rounded-lg px-4 py-3 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200" required />
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Phone -->
+                <div class="form-group">
+                    <label for="contact_phone" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Contact Phone <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <input type="text" name="contact_phone" id="contact_phone" value="{{ form.contact_phone.value|default:hotel.contact_phone }}" 
+                               class="form-control w-full border border-gray-300 rounded-lg px-4 py-3 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200" required />
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-phone text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address -->
+                <div class="form-group md:col-span-2">
+                    <label for="address" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Address <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <textarea name="address" id="address" rows="3" 
+                                  class="form-control w-full border border-gray-300 rounded-lg px-4 py-3 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-vertical" required>{{ form.address.value|default:hotel.address }}</textarea>
+                        <div class="absolute top-3 left-0 pl-3 flex items-start pointer-events-none">
+                            <i class="fas fa-map-marker-alt text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="form-group md:col-span-2">
+                    <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Description
+                    </label>
+                    <div class="relative">
+                        <textarea name="description" id="description" rows="4" 
+                                  class="form-control w-full border border-gray-300 rounded-lg px-4 py-3 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-vertical" 
+                                  placeholder="Describe your hotel, amenities, and unique features...">{{ form.description.value|default:hotel.description }}</textarea>
+                        <div class="absolute top-3 left-0 pl-3 flex items-start pointer-events-none">
+                            <i class="fas fa-align-left text-gray-400"></i>
+                        </div>
+                    </div>
+                    <p class="mt-1 text-sm text-gray-500">Provide a detailed description of your hotel for guests</p>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex flex-col sm:flex-row gap-3 pt-8 mt-8 border-t border-gray-200">
+                <button type="submit" class="btn btn-primary flex-1 sm:flex-none">
+                    <i class="fas fa-save mr-2"></i>Save Changes
+                </button>
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary flex-1 sm:flex-none">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.form-group label {
+    font-weight: 600;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 6px 8px -1px rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #f8fafc;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-secondary:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+</style>
+{% endblock %}
