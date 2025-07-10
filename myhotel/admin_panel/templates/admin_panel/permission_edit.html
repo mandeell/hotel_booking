@@ -1,0 +1,122 @@
+{% extends 'admin_panel/base_site.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-yellow-50 to-orange-50">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                        <i class="fas fa-edit text-yellow-600"></i>
+                        Edit Permission
+                    </h1>
+                    <p class="text-gray-600 mt-1">Modify permission details</p>
+                </div>
+                <a href="{% url 'admin_panel:admin_permissions' %}" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Permissions
+                </a>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <form method="post" class="p-6">
+            {% csrf_token %}
+            
+            <!-- Basic Information -->
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                            Permission Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="name" name="name" required value="{{ permission.name }}"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                               placeholder="Enter permission name">
+                        <p class="text-sm text-gray-500 mt-1">A descriptive name for this permission</p>
+                    </div>
+                    
+                    <div>
+                        <label for="codename" class="block text-sm font-medium text-gray-700 mb-2">
+                            Code Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="codename" name="codename" required value="{{ permission.codename }}"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                               placeholder="Enter permission codename">
+                        <p class="text-sm text-gray-500 mt-1">Unique identifier for this permission</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="content_type" class="block text-sm font-medium text-gray-700 mb-2">
+                            Content Type
+                        </label>
+                        <input type="text" value="{{ permission.content_type.model|title }}" readonly
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600">
+                        <p class="text-sm text-gray-500 mt-1">Content type cannot be changed after creation</p>
+                    </div>
+                    
+                    <div>
+                        <label for="permission_type" class="block text-sm font-medium text-gray-700 mb-2">
+                            Permission Type
+                        </label>
+                        <input type="text" value="{{ permission.get_permission_type_display }}" readonly
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600">
+                        <p class="text-sm text-gray-500 mt-1">Permission type cannot be changed after creation</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                        Description
+                    </label>
+                    <textarea id="description" name="description" rows="3"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                              placeholder="Enter permission description (optional)">{{ permission.description }}</textarea>
+                    <p class="text-sm text-gray-500 mt-1">Optional description explaining what this permission allows</p>
+                </div>
+
+                <!-- Permission Info -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Permission Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-500">Created:</span>
+                            <span class="text-gray-900">{{ permission.created_at|date:"M d, Y H:i" }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Content Type:</span>
+                            <span class="text-gray-900">{{ permission.content_type.model|title }}</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Type:</span>
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                   {% if permission.permission_type == 'add' %}bg-green-100 text-green-800
+                                   {% elif permission.permission_type == 'view' %}bg-blue-100 text-blue-800
+                                   {% elif permission.permission_type == 'edit' %}bg-yellow-100 text-yellow-800
+                                   {% elif permission.permission_type == 'delete' %}bg-red-100 text-red-800
+                                   {% endif %}">
+                                {{ permission.get_permission_type_display }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
+                    <a href="{% url 'admin_panel:admin_permissions' %}" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors flex items-center gap-2">
+                        <i class="fas fa-save"></i>
+                        Update Permission
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

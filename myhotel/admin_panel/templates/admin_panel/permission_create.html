@@ -1,0 +1,228 @@
+{% extends 'admin_panel/base_site.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                        <i class="fas fa-plus-circle text-blue-600"></i>
+                        Create New Permission
+                    </h1>
+                    <p class="text-gray-600 mt-1">Define a new permission for system access control</p>
+                </div>
+                <a href="{% url 'admin_panel:admin_permissions' %}" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Permissions
+                </a>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <form method="post" class="p-6">
+            {% csrf_token %}
+            
+            <!-- Basic Information -->
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                            Permission Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="name" name="name" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="Enter permission name">
+                        <p class="text-sm text-gray-500 mt-1">A descriptive name for this permission</p>
+                    </div>
+                    
+                    <div>
+                        <label for="codename" class="block text-sm font-medium text-gray-700 mb-2">
+                            Code Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="codename" name="codename" required
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="Enter permission codename">
+                        <p class="text-sm text-gray-500 mt-1">Unique identifier for this permission</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="permission_category" class="block text-sm font-medium text-gray-700 mb-2">
+                            Permission Category <span class="text-red-500">*</span>
+                        </label>
+                        <select id="permission_category" name="permission_category" required
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="model">Model Permission</option>
+                            <option value="section_access">Section Access Permission</option>
+                        </select>
+                        <p class="text-sm text-gray-500 mt-1">Choose the category of permission</p>
+                    </div>
+                    
+                    <div id="section_name_container" style="display: none;">
+                        <label for="section_name" class="block text-sm font-medium text-gray-700 mb-2">
+                            Section Name <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="section_name" name="section_name"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="Enter section name (e.g., booking, guest)">
+                        <p class="text-sm text-gray-500 mt-1">The section this permission grants access to</p>
+                    </div>
+                </div>
+
+                <div id="model_permission_fields" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="content_type" class="block text-sm font-medium text-gray-700 mb-2">
+                            Content Type <span class="text-red-500">*</span>
+                        </label>
+                        <select id="content_type" name="content_type"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select content type</option>
+                            {% for content_type in content_types %}
+                            <option value="{{ content_type.id }}">{{ content_type.model|title }}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="text-sm text-gray-500 mt-1">The model this permission applies to</p>
+                    </div>
+                    
+                    <div>
+                        <label for="permission_type" class="block text-sm font-medium text-gray-700 mb-2">
+                            Permission Type <span class="text-red-500">*</span>
+                        </label>
+                        <select id="permission_type" name="permission_type"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select permission type</option>
+                            {% for type_code, type_display in permission_types %}
+                            <option value="{{ type_code }}">{{ type_display }}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="text-sm text-gray-500 mt-1">The type of action this permission allows</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                        Description
+                    </label>
+                    <textarea id="description" name="description" rows="3"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Enter permission description (optional)"></textarea>
+                    <p class="text-sm text-gray-500 mt-1">Optional description explaining what this permission allows</p>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
+                    <a href="{% url 'admin_panel:admin_permissions' %}" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                        <i class="fas fa-save"></i>
+                        Create Permission
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const permissionCategorySelect = document.getElementById('permission_category');
+    const sectionNameContainer = document.getElementById('section_name_container');
+    const sectionNameInput = document.getElementById('section_name');
+    const modelPermissionFields = document.getElementById('model_permission_fields');
+    const contentTypeSelect = document.getElementById('content_type');
+    const permissionTypeSelect = document.getElementById('permission_type');
+    const nameInput = document.getElementById('name');
+    const codenameInput = document.getElementById('codename');
+
+    // Toggle fields based on permission category
+    function toggleFields() {
+        const isModelPermission = permissionCategorySelect.value === 'model';
+        const isSectionAccess = permissionCategorySelect.value === 'section_access';
+        
+        // Show/hide fields based on selection
+        sectionNameContainer.style.display = isSectionAccess ? 'block' : 'none';
+        modelPermissionFields.style.display = isModelPermission ? 'grid' : 'none';
+        
+        // Set required attributes based on selection
+        contentTypeSelect.required = isModelPermission;
+        permissionTypeSelect.required = isModelPermission;
+        sectionNameInput.required = isSectionAccess;
+        
+        // Clear fields when switching
+        if (isSectionAccess) {
+            contentTypeSelect.value = '';
+            permissionTypeSelect.value = '';
+        } else if (isModelPermission) {
+            sectionNameInput.value = '';
+        }
+        
+        // Update name and codename fields
+        updateNameAndCodename();
+    }
+
+    // Auto-generate name and codename based on selections
+    function updateNameAndCodename() {
+        const isModelPermission = permissionCategorySelect.value === 'model';
+        const isSectionAccess = permissionCategorySelect.value === 'section_access';
+        
+        // Clear existing values
+        nameInput.value = '';
+        codenameInput.value = '';
+        
+        if (isModelPermission) {
+            updateModelPermissionFields();
+        } else if (isSectionAccess) {
+            updateSectionAccessFields();
+        }
+    }
+    
+    // Update fields for model permissions
+    function updateModelPermissionFields() {
+        const contentType = contentTypeSelect.options[contentTypeSelect.selectedIndex];
+        const permissionType = permissionTypeSelect.options[permissionTypeSelect.selectedIndex];
+        
+        if (contentType && contentType.value && permissionType && permissionType.value) {
+            const modelName = contentType.text;
+            const actionName = permissionType.text;
+            
+            // Auto-fill name if empty
+            if (!nameInput.value.trim()) {
+                nameInput.value = `Can ${actionName.toLowerCase()} ${modelName.toLowerCase()}`;
+            }
+            
+            // Auto-fill codename if empty
+            if (!codenameInput.value.trim()) {
+                codenameInput.value = `${permissionType.value}_${contentType.text.toLowerCase()}`;
+            }
+        }
+    }
+    
+    // Update fields for section access permissions
+    function updateSectionAccessFields() {
+        const sectionName = sectionNameInput.value.trim();
+        
+        if (sectionName) {
+            // Auto-fill name
+            nameInput.value = `Can access ${sectionName} section`;
+            
+            // Auto-fill codename
+            codenameInput.value = `access_${sectionName.toLowerCase().replace(/\s+/g, '_')}`;
+        }
+    }
+
+    // Event listeners
+    permissionCategorySelect.addEventListener('change', toggleFields);
+    contentTypeSelect.addEventListener('change', updateNameAndCodename);
+    permissionTypeSelect.addEventListener('change', updateNameAndCodename);
+    sectionNameInput.addEventListener('input', updateSectionAccessFields);
+    
+    // Initialize fields on page load
+    toggleFields();
+});
+</script>
+{% endblock %}
