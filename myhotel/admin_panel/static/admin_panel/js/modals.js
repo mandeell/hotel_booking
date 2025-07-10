@@ -486,8 +486,8 @@ function showRoleRemoveModal(username, roleName, onConfirm) {
 function showLogoutConfirmation() {
     if (window.modalManager) {
         window.modalManager.showLogoutModal(function() {
-            // Redirect to logout URL
-            window.location.href = '/admin/logout/';
+            // Redirect to admin panel logout URL
+            window.location.href = '/hotel/admin/logout/';
         });
     }
 }

@@ -153,3 +153,7 @@ STATICFILES_DIRS = [
 STATIC_ROOT = BASE_DIR / 'staticfiles'  # for production
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Authentication URLs
+LOGIN_URL = '/hotel/admin/login/'
+LOGOUT_REDIRECT_URL = '/hotel/admin/login/'
