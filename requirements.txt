@@ -1,0 +1,4 @@
+Django~=5.2.4
+requests~=2.32.4
+Hotel~=1.1
+python-decouple~=3.8

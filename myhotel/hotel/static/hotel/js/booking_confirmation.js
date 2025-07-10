@@ -34,27 +34,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Check room availability
+            // Check room availability before proceeding to confirmation
             try {
+                console.log('Checking availability before confirmation...');
                 const availability = await window.checkRoomAvailability(
                     formData.get('modalCheckin'),
                     formData.get('modalCheckout'),
                     formData.get('roomType'),
-                    formData.get('rooms'),
+                    formData.get('modalRooms'),
                     formData.get('modalGuests')
                 );
-                if (availability.errors?.length > 0 || availability.availability_message !== 'Room available') {
-                    console.error('Rooms not available:', availability.errors?.length > 0 ? availability.errors : availability.availability_message);
-                    const feedbackDiv = document.getElementById('confirmationFeedback');
-                    feedbackDiv.innerHTML = `<div class="alert alert-danger" role="alert">${
-                        availability.errors?.length > 0 ? availability.errors.join(', ') : availability.availability_message
-                    }</div>`;
+                
+                console.log('Availability check result:', availability);
+                
+                if (availability.errors?.length > 0) {
+                    console.error('Availability check failed with errors:', availability.errors);
+                    alert(`Room availability check failed:\n${availability.errors.join('\n')}\n\nPlease adjust your booking details and try again.`);
                     return;
                 }
+                
+                if (availability.availability_message !== 'Room available') {
+                    console.error('Rooms not available:', availability.availability_message);
+                    alert(`${availability.availability_message}\n\nPlease select different dates or room type.`);
+                    return;
+                }
+                
+                console.log('Room availability confirmed, proceeding to confirmation modal');
             } catch (error) {
                 console.error('Availability check error:', error);
-                const feedbackDiv = document.getElementById('confirmationFeedback');
-                feedbackDiv.innerHTML = `<div class="alert alert-danger" role="alert">Error checking availability: ${error.message}</div>`;
+                alert(`Error checking room availability: ${error.message}\n\nPlease try again or contact support.`);
                 return;
             }
 

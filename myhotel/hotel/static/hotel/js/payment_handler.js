@@ -1,5 +1,70 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Confirm booking handler with Paystack payment
+    // Helper function to get CSRF token
+    function getCSRFToken() {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                         document.querySelector('meta[name=csrf-token]')?.getAttribute('content') ||
+                         getCookie('csrftoken');
+        return csrfToken;
+    }
+
+    // Helper function to get cookie value
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Enhanced fetch with retry mechanism
+    async function fetchWithRetry(url, options, maxRetries = 3) {
+        let lastError = null;
+        
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                console.log(`Fetch attempt ${attempt}/${maxRetries} to ${url}`);
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000);
+                
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                return response;
+                
+            } catch (error) {
+                console.error(`Fetch attempt ${attempt} failed:`, error);
+                lastError = error;
+                
+                // Don't retry for certain errors
+                if (error.name === 'AbortError' || 
+                    error.message.includes('403') ||
+                    error.message.includes('401')) {
+                    break;
+                }
+                
+                // Wait before retrying
+                if (attempt < maxRetries) {
+                    const delay = Math.pow(2, attempt) * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+        
+        throw lastError;
+    }
+
+    // Confirm booking handler with modern Paystack payment
     const confirmBookingBtn = document.getElementById('confirmBooking');
     if (confirmBookingBtn) {
         confirmBookingBtn.addEventListener('click', async function () {
@@ -12,7 +77,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const confirmationModal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
             const paymentResultModal = new bootstrap.Modal(document.getElementById('paymentResultModal'), { backdrop: 'static' });
             const feedbackDiv = document.getElementById('paymentResultFeedback');
-            const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
 
             feedbackDiv.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
             confirmBookingBtn.disabled = true;
@@ -34,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     formData.get('modalCheckin'),
                     formData.get('modalCheckout'),
                     formData.get('roomType'),
-                    formData.get('rooms'),
+                    formData.get('modalRooms'),
                     formData.get('modalGuests')
                 );
                 if (availability.errors?.length > 0 || availability.availability_message !== 'Room available') {
@@ -74,24 +138,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 confirmationModal.hide();
                 return;
             }
-            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                console.error('Invalid email:', email);
-                feedbackDiv.innerHTML = '<div class="alert alert-danger" role="alert">Valid email is required.</div>';
-                enableRetry();
-                paymentResultModal.show();
-                confirmationModal.hide();
-                return;
-            }
-            if (!phone || !/^\+?\d{10,15}$/.test(phone)) {
-                console.error('Invalid phone:', phone);
-                feedbackDiv.innerHTML = '<div class="alert alert-danger" role="alert">Valid phone number is required (e.g., +2347034618587).</div>';
-                enableRetry();
-                paymentResultModal.show();
-                confirmationModal.hide();
-                return;
-            }
 
-            // Wait for Paystack to be available using event listener
+            // Wait for Paystack to be available
             const waitForPaystack = () => {
                 return new Promise((resolve, reject) => {
                     if (typeof PaystackPop !== 'undefined') {
@@ -102,7 +150,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     
                     console.log('Waiting for Paystack to load...');
                     
-                    // Listen for the custom event
                     const paystackReadyHandler = () => {
                         console.log('Paystack ready event received');
                         if (typeof PaystackPop !== 'undefined') {
@@ -124,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         } else {
                             reject(new Error('Paystack SDK failed to load within timeout'));
                         }
-                    }, 10000); // 10 second timeout
+                    }, 10000);
                 });
             };
 
@@ -140,144 +187,161 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Store expected amount
+            // Store expected amount with retry mechanism
             try {
-                const storeResponse = await fetch('/hotel/store-expected-amount', {
+                const csrfToken = getCSRFToken();
+                if (!csrfToken) {
+                    throw new Error('CSRF token not found. Please refresh the page and try again.');
+                }
+
+                const storeResponse = await fetchWithRetry('/hotel/store-expected-amount', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({ amount: totalCost })
                 });
 
                 if (!storeResponse.ok) {
-                    throw new Error(`HTTP error! Status: ${storeResponse.status}`);
+                    let errorMessage = `Failed to prepare payment (${storeResponse.status})`;
+                    try {
+                        const errorData = await storeResponse.json();
+                        errorMessage = errorData.errors || errorMessage;
+                    } catch (e) {
+                        console.error('Error parsing store amount error response:', e);
+                    }
+                    throw new Error(errorMessage);
                 }
 
                 const storeData = await storeResponse.json();
                 if (!storeData.success) {
                     console.error('Failed to store expected amount:', storeData.errors);
-                    feedbackDiv.innerHTML = `<div class="alert alert-danger" role="alert">Error preparing payment: ${storeData.errors}</div>`;
-                    enableRetry();
-                    paymentResultModal.show();
-                    confirmationModal.hide();
-                    return;
+                    throw new Error(storeData.errors || 'Failed to prepare payment');
                 }
 
                 console.log('Initiating payment with:', { totalCost, email, phone, reference });
 
-                // Check which Paystack API is available
-                let paystackAPI = null;
-                let handler = null;
-
-                if (typeof PaystackPop !== 'undefined' && typeof PaystackPop.setup === 'function') {
-                    paystackAPI = 'PaystackPop';
-                    console.log('Using PaystackPop API');
-                } else if (typeof Paystack !== 'undefined' && typeof Paystack.setup === 'function') {
-                    paystackAPI = 'Paystack';
-                    console.log('Using Paystack API');
-                } else {
-                    throw new Error('No valid Paystack API found');
-                }
-
-                console.log('Using Paystack API:', paystackAPI);
-                console.log('PAYSTACK_PUBLIC_KEY:', window.PAYSTACK_PUBLIC_KEY);
-
-                // Create payment configuration
-                const paymentConfig = {
-                    key: window.PAYSTACK_PUBLIC_KEY,
-                    email: email,
-                    amount: totalCost * 100,
-                    currency: 'NGN',
-                    ref: reference,
-                    metadata: {
-                        custom_fields: [
-                            {
-                                display_name: "Phone Number",
-                                variable_name: "phone_number",
-                                value: phone
-                            },
-                            {
-                                display_name: "Full Name",
-                                variable_name: "full_name",
-                                value: `${firstName} ${lastName}`
-                            }
-                        ]
-                    }
-                };
-
-                // Add callbacks based on API version
-                if (paystackAPI === 'PaystackPop') {
-                    paymentConfig.callback = function(response) {
-                        console.log('Paystack payment response:', response);
-                        const verifyReference = response.reference || response.ref || reference;
-                        handlePaymentSuccess(verifyReference, formData, confirmationModal, paymentResultModal, feedbackDiv, firstName, lastName, email, phone, totalCostRaw, enableRetry);
-                    };
-                    paymentConfig.onClose = function() {
-                        console.log('Payment modal closed');
-                        confirmationModal.hide();
-                        paymentResultModal.show();
-                        feedbackDiv.innerHTML = `<div class="alert alert-warning" role="alert">Payment was not completed. Please try again.</div>`;
-                        document.getElementById('bookingDetails').style.display = 'none';
-                        document.getElementById('printReceiptBtn').style.display = 'none';
-                        enableRetry();
-                    };
-                } else if (paystackAPI === 'Paystack') {
-                    paymentConfig.onSuccess = function(response) {
-                        console.log('Paystack payment response:', response);
-                        const verifyReference = response.reference || response.ref || reference;
-                        handlePaymentSuccess(verifyReference, formData, confirmationModal, paymentResultModal, feedbackDiv, firstName, lastName, email, phone, totalCostRaw, enableRetry);
-                    };
-                    paymentConfig.onCancel = function() {
-                        console.log('Payment modal closed');
-                        confirmationModal.hide();
-                        paymentResultModal.show();
-                        feedbackDiv.innerHTML = `<div class="alert alert-warning" role="alert">Payment was not completed. Please try again.</div>`;
-                        document.getElementById('bookingDetails').style.display = 'none';
-                        document.getElementById('printReceiptBtn').style.display = 'none';
-                        enableRetry();
-                    };
-                }
-
-                console.log('Payment config:', paymentConfig);
-
-                // Setup payment handler
-                try {
-                    if (paystackAPI === 'PaystackPop') {
-                        handler = PaystackPop.setup(paymentConfig);
-                    } else if (paystackAPI === 'Paystack') {
-                        handler = Paystack.setup(paymentConfig);
-                    }
-                    console.log('Payment handler created successfully:', handler);
-                } catch (setupError) {
-                    console.error('Paystack setup error details:', setupError);
-                    throw new Error(`Paystack setup failed: ${setupError.message}`);
-                }
+                // Use modern Paystack API
+                let paystack = null;
                 
                 try {
-                    handler.openIframe();
-                } catch (error) {
-                    console.error('Paystack initialization error:', error);
-                    confirmationModal.hide();
-                    paymentResultModal.show();
-                    feedbackDiv.innerHTML = `<div class="alert alert-danger" role="alert">Payment initialization failed: ${error.message}</div>`;
-                    document.getElementById('bookingDetails').style.display = 'none';
-                    document.getElementById('printReceiptBtn').style.display = 'none';
-                    enableRetry();
+                    // Try modern constructor first
+                    paystack = new PaystackPop();
+                } catch (constructorError) {
+                    console.log('Modern constructor failed, trying legacy setup:', constructorError);
+                    // Fallback to legacy API
+                    if (typeof PaystackPop.setup === 'function') {
+                        paystack = PaystackPop.setup({
+                            key: window.PAYSTACK_PUBLIC_KEY,
+                            email: email,
+                            amount: totalCost * 100,
+                            currency: 'NGN',
+                            ref: reference,
+                            metadata: {
+                                custom_fields: [
+                                    {
+                                        display_name: "Phone Number",
+                                        variable_name: "phone_number",
+                                        value: phone
+                                    },
+                                    {
+                                        display_name: "Full Name",
+                                        variable_name: "full_name",
+                                        value: `${firstName} ${lastName}`
+                                    }
+                                ]
+                            },
+                            callback: function(response) {
+                                console.log('Paystack payment response:', response);
+                                const verifyReference = response.reference || response.ref || reference;
+                                handlePaymentSuccess(verifyReference, formData, confirmationModal, paymentResultModal, feedbackDiv, firstName, lastName, email, phone, totalCostRaw, enableRetry);
+                            },
+                            onClose: function() {
+                                console.log('Payment modal closed');
+                                confirmationModal.hide();
+                                paymentResultModal.show();
+                                feedbackDiv.innerHTML = `<div class="alert alert-warning" role="alert">Payment was not completed. Please try again.</div>`;
+                                document.getElementById('bookingDetails').style.display = 'none';
+                                document.getElementById('printReceiptBtn').style.display = 'none';
+                                enableRetry();
+                            }
+                        });
+                    } else {
+                        throw new Error('No valid Paystack API found');
+                    }
                 }
+
+                if (paystack) {
+                    if (typeof paystack.newTransaction === 'function') {
+                        // Modern API
+                        paystack.newTransaction({
+                            key: window.PAYSTACK_PUBLIC_KEY,
+                            email: email,
+                            amount: totalCost * 100,
+                            currency: 'NGN',
+                            ref: reference,
+                            metadata: {
+                                custom_fields: [
+                                    {
+                                        display_name: "Phone Number",
+                                        variable_name: "phone_number",
+                                        value: phone
+                                    },
+                                    {
+                                        display_name: "Full Name",
+                                        variable_name: "full_name",
+                                        value: `${firstName} ${lastName}`
+                                    }
+                                ]
+                            },
+                            onSuccess: function(response) {
+                                console.log('Paystack payment response:', response);
+                                const verifyReference = response.reference || response.ref || reference;
+                                handlePaymentSuccess(verifyReference, formData, confirmationModal, paymentResultModal, feedbackDiv, firstName, lastName, email, phone, totalCostRaw, enableRetry);
+                            },
+                            onCancel: function() {
+                                console.log('Payment modal closed');
+                                confirmationModal.hide();
+                                paymentResultModal.show();
+                                feedbackDiv.innerHTML = `<div class="alert alert-warning" role="alert">Payment was not completed. Please try again.</div>`;
+                                document.getElementById('bookingDetails').style.display = 'none';
+                                document.getElementById('printReceiptBtn').style.display = 'none';
+                                enableRetry();
+                            }
+                        });
+                    } else if (typeof paystack.openIframe === 'function') {
+                        // Legacy API
+                        paystack.openIframe();
+                    } else if (typeof paystack.open === 'function') {
+                        // Modern open method
+                        paystack.open();
+                    } else {
+                        throw new Error('No valid payment method found on Paystack instance');
+                    }
+                } else {
+                    throw new Error('Failed to initialize Paystack');
+                }
+
             } catch (error) {
                 console.error('Error in payment setup:', error);
                 confirmationModal.hide();
                 paymentResultModal.show();
-                feedbackDiv.innerHTML = `<div class="alert alert-danger" role="alert">Error preparing payment: ${error.message}</div>`;
+                
+                let errorMessage = error.message;
+                if (error.message.includes('Failed to fetch') || 
+                    error.message.includes('ERR_CONNECTION_RESET') ||
+                    error.message.includes('ERR_SOCKET_NOT_CONNECTED')) {
+                    errorMessage = 'Network connection failed. Please check your internet connection and try again.';
+                }
+                
+                feedbackDiv.innerHTML = `<div class="alert alert-danger" role="alert">Error preparing payment: ${errorMessage}</div>`;
                 document.getElementById('bookingDetails').style.display = 'none';
                 document.getElementById('printReceiptBtn').style.display = 'none';
                 enableRetry();
             }
         });
-    } else {
-        console.error("confirmBooking element not found");
     }
 
     // Retry booking handler
@@ -289,26 +353,96 @@ document.addEventListener('DOMContentLoaded', function () {
             paymentResultModal.hide();
             bookingModal.show();
         });
-    } else {
-        console.error("retryBookingBtn element not found");
     }
 });
 
-// Separate function to handle payment success
+// Enhanced payment success handler with retry mechanism
 async function handlePaymentSuccess(verifyReference, formData, confirmationModal, paymentResultModal, feedbackDiv, firstName, lastName, email, phone, totalCostRaw, enableRetry) {
     try {
-        // Verify payment
-        const verifyResponse = await fetch('/hotel/verify-payment', {
+        console.log('Starting payment verification for reference:', verifyReference);
+        
+        function getCSRFToken() {
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                             document.querySelector('meta[name=csrf-token]')?.getAttribute('content') ||
+                             getCookie('csrftoken');
+            return csrfToken;
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Enhanced fetch with retry
+        async function fetchWithRetry(url, options, maxRetries = 3) {
+            let lastError = null;
+            
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 30000);
+                    
+                    const response = await fetch(url, {
+                        ...options,
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    return response;
+                    
+                } catch (error) {
+                    lastError = error;
+                    if (attempt < maxRetries && 
+                        !error.message.includes('403') && 
+                        !error.message.includes('401')) {
+                        const delay = Math.pow(2, attempt) * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    } else {
+                        break;
+                    }
+                }
+            }
+            
+            throw lastError;
+        }
+
+        const csrfToken = getCSRFToken();
+        if (!csrfToken) {
+            throw new Error('CSRF token not found. Please refresh the page and try again.');
+        }
+
+        // Verify payment with retry mechanism
+        const verifyResponse = await fetchWithRetry('/hotel/verify-payment', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({ reference: verifyReference })
         });
 
+        console.log('Verify response status:', verifyResponse.status);
+
         if (!verifyResponse.ok) {
-            throw new Error(`HTTP error! Status: ${verifyResponse.status}`);
+            let errorMessage = `Payment verification failed (${verifyResponse.status})`;
+            try {
+                const errorData = await verifyResponse.json();
+                errorMessage = errorData.message || errorMessage;
+            } catch (e) {
+                console.error('Error parsing verification error response:', e);
+            }
+            throw new Error(errorMessage);
         }
 
         const verifyData = await verifyResponse.json();
@@ -319,24 +453,40 @@ async function handlePaymentSuccess(verifyReference, formData, confirmationModal
         feedbackDiv.innerHTML = '';
         
         if (verifyData.status === 'success') {
-            // Submit booking
-            const bookingResponse = await fetch('/hotel/submit-booking', {
+            console.log('Payment verified successfully, submitting booking...');
+            
+            // Add payment verification data to form
+            formData.append('transaction_id', verifyData.transaction_id || verifyReference);
+            formData.append('payment_status', 'success');
+            
+            // Submit booking with retry mechanism
+            const bookingResponse = await fetchWithRetry('/hotel/submit-booking', {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             });
 
+            console.log('Booking response status:', bookingResponse.status);
+
             if (!bookingResponse.ok) {
-                throw new Error(`HTTP error! Status: ${bookingResponse.status}`);
+                let errorMessage = `Booking submission failed (${bookingResponse.status})`;
+                try {
+                    const errorData = await bookingResponse.json();
+                    errorMessage = errorData.errors || errorMessage;
+                } catch (e) {
+                    console.error('Error parsing booking error response:', e);
+                }
+                throw new Error(errorMessage);
             }
 
             const bookingData = await bookingResponse.json();
             console.log('Booking response:', bookingData);
             
             if (bookingData.success) {
-                feedbackDiv.innerHTML = '<div class="alert alert-success" role="alert">Booking and payment confirmed successfully!</div>';
+                feedbackDiv.innerHTML = '<div class="alert alert-success" role="alert"><i class="fas fa-check-circle"></i> Booking and payment confirmed successfully!</div>';
                 document.getElementById('bookingDetails').style.display = 'block';
                 document.getElementById('printReceiptBtn').style.display = 'inline-block';
                 document.getElementById('retryBookingBtn').style.display = 'none';
@@ -352,16 +502,17 @@ async function handlePaymentSuccess(verifyReference, formData, confirmationModal
                 document.getElementById('resultGuests').textContent = formData.get('modalGuests');
                 document.getElementById('resultRooms').textContent = formData.get('modalRooms');
                 document.getElementById('resultTotalCost').textContent = totalCostRaw;
-                document.getElementById('resultTransactionId').textContent = verifyReference;
+                document.getElementById('resultTransactionId').textContent = verifyData.transaction_id || verifyReference;
             } else {
-                feedbackDiv.innerHTML = `<div class="alert alert-danger" role="alert">Booking error: ${bookingData.errors}</div>`;
+                console.error('Booking submission failed:', bookingData.errors);
+                feedbackDiv.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fas fa-exclamation-triangle"></i> Booking error: ${bookingData.errors}</div>`;
                 document.getElementById('bookingDetails').style.display = 'none';
                 document.getElementById('printReceiptBtn').style.display = 'none';
                 enableRetry();
             }
         } else {
             console.error('Payment verification failed:', verifyData.message);
-            feedbackDiv.innerHTML = `<div class="alert alert-danger" role="alert">Payment verification failed: ${verifyData.message}</div>`;
+            feedbackDiv.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fas fa-times-circle"></i> Payment verification failed: ${verifyData.message}</div>`;
             document.getElementById('bookingDetails').style.display = 'none';
             document.getElementById('printReceiptBtn').style.display = 'none';
             enableRetry();
@@ -370,7 +521,15 @@ async function handlePaymentSuccess(verifyReference, formData, confirmationModal
         console.error('Error in payment callback:', error);
         confirmationModal.hide();
         paymentResultModal.show();
-        feedbackDiv.innerHTML = `<div class="alert alert-danger" role="alert">Error processing payment: ${error.message}</div>`;
+        
+        let errorMessage = error.message;
+        if (error.message.includes('Failed to fetch') || 
+            error.message.includes('ERR_CONNECTION_RESET') ||
+            error.message.includes('ERR_SOCKET_NOT_CONNECTED')) {
+            errorMessage = 'Network connection failed during payment processing. Please check your internet connection and contact support if the issue persists.';
+        }
+        
+        feedbackDiv.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fas fa-exclamation-triangle"></i> Error processing payment: ${errorMessage}</div>`;
         document.getElementById('bookingDetails').style.display = 'none';
         document.getElementById('printReceiptBtn').style.display = 'none';
         enableRetry();

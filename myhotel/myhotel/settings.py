@@ -13,8 +13,8 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = True
 
 # ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.pythonanywhere.com']
-ALLOWED_HOSTS = ['668e04491430.ngrok-free.app', '127.0.0.1']
-CSRF_TRUSTED_ORIGINS = ['https://668e04491430.ngrok-free.app']
+ALLOWED_HOSTS = ['c7ff43db1de0.ngrok-free.app', '127.0.0.1']
+CSRF_TRUSTED_ORIGINS = ['https://c7ff43db1de0.ngrok-free.app']
 
 
 # Application definition
