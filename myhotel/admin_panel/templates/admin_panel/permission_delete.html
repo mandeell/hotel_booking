@@ -1,0 +1,112 @@
+{% extends 'admin_panel/base_site.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-red-50 to-pink-50">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                        <i class="fas fa-trash-alt text-red-600"></i>
+                        Delete Permission
+                    </h1>
+                    <p class="text-gray-600 mt-1">Confirm permission deletion</p>
+                </div>
+                <a href="{% url 'admin_panel:admin_permissions' %}" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Permissions
+                </a>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6">
+            <!-- Warning Message -->
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-red-400 text-xl"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">
+                            Warning: This action cannot be undone
+                        </h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <p>Deleting this permission will remove it from all roles that currently have it assigned. This may affect user access to system features.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Permission Details -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Permission Details</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <span class="text-sm font-medium text-gray-500">Name:</span>
+                        <p class="text-gray-900">{{ permission.name }}</p>
+                    </div>
+                    <div>
+                        <span class="text-sm font-medium text-gray-500">Code Name:</span>
+                        <p class="text-gray-900 font-mono text-sm">{{ permission.codename }}</p>
+                    </div>
+                    <div>
+                        <span class="text-sm font-medium text-gray-500">Content Type:</span>
+                        <p class="text-gray-900">{{ permission.content_type.model|title }}</p>
+                    </div>
+                    <div>
+                        <span class="text-sm font-medium text-gray-500">Permission Type:</span>
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                               {% if permission.permission_type == 'add' %}bg-green-100 text-green-800
+                               {% elif permission.permission_type == 'view' %}bg-blue-100 text-blue-800
+                               {% elif permission.permission_type == 'edit' %}bg-yellow-100 text-yellow-800
+                               {% elif permission.permission_type == 'delete' %}bg-red-100 text-red-800
+                               {% endif %}">
+                            {{ permission.get_permission_type_display }}
+                        </span>
+                    </div>
+                    {% if permission.description %}
+                    <div class="md:col-span-2">
+                        <span class="text-sm font-medium text-gray-500">Description:</span>
+                        <p class="text-gray-900">{{ permission.description }}</p>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <span class="text-sm font-medium text-gray-500">Created:</span>
+                        <p class="text-gray-900">{{ permission.created_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confirmation Form -->
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                
+                <div class="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
+                    <a href="{% url 'admin_panel:admin_permissions' %}" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2">
+                        <i class="fas fa-trash-alt"></i>
+                        Delete Permission
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add confirmation dialog
+    const deleteForm = document.querySelector('form');
+    deleteForm.addEventListener('submit', function(e) {
+        if (!confirm('Are you sure you want to delete this permission? This action cannot be undone.')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

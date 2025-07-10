@@ -1,21 +1,15 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Try loading the latest version of Paystack
+    // Load the latest version of Paystack with modern API
     const script = document.createElement('script');
     script.src = 'https://js.paystack.co/v2/inline.js';
     script.async = true;
     script.onload = () => {
         console.log('Paystack SDK v2 loaded successfully');
         console.log('PaystackPop available:', typeof PaystackPop !== 'undefined');
-        console.log('Paystack available:', typeof Paystack !== 'undefined');
         
         if (typeof PaystackPop !== 'undefined') {
-            console.log('PaystackPop.setup:', typeof PaystackPop.setup);
-            console.log('PaystackPop methods:', Object.getOwnPropertyNames(PaystackPop));
-        }
-        
-        if (typeof Paystack !== 'undefined') {
-            console.log('Paystack.setup:', typeof Paystack.setup);
-            console.log('Paystack methods:', Object.getOwnPropertyNames(Paystack));
+            console.log('PaystackPop constructor:', typeof PaystackPop);
+            console.log('PaystackPop methods:', Object.getOwnPropertyNames(PaystackPop.prototype || {}));
         }
         
         // Dispatch a custom event when Paystack is ready
@@ -32,12 +26,15 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log('PaystackPop available:', typeof PaystackPop !== 'undefined');
             if (typeof PaystackPop !== 'undefined') {
                 console.log('PaystackPop.setup:', typeof PaystackPop.setup);
-                console.log('PaystackPop methods:', Object.getOwnPropertyNames(PaystackPop));
             }
             // Dispatch a custom event when Paystack is ready
             window.dispatchEvent(new CustomEvent('paystackReady'));
         };
-        fallbackScript.onerror = () => console.error('Failed to load Paystack SDK v1 as well');
+        fallbackScript.onerror = () => {
+            console.error('Failed to load Paystack SDK v1 as well');
+            // Dispatch event anyway so the app doesn't hang
+            window.dispatchEvent(new CustomEvent('paystackReady'));
+        };
         document.head.appendChild(fallbackScript);
     };
     document.head.appendChild(script);

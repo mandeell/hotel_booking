@@ -55,7 +55,7 @@ class AdminRoomCreateView(PermissionMixin, CreateView):
     model = Room
     form_class = RoomForm
     template_name = 'admin_panel/add_room.html'
-    success_url = reverse_lazy('admin_rooms')
+    success_url = reverse_lazy('admin_panel:admin_rooms')
     required_section = 'room_setup'
     model_permission_type = 'add'
     redirect_url = 'admin_panel:dashboard'
@@ -64,7 +64,7 @@ class AdminRoomEditView(PermissionMixin, UpdateView):
     model = Room
     form_class = RoomForm
     template_name = 'admin_panel/edit_room.html'
-    success_url = reverse_lazy('admin_rooms')
+    success_url = reverse_lazy('admin_panel:admin_rooms')
     context_object_name = 'room'
     required_section = 'room_setup'
     model_permission_type = 'edit'
@@ -73,7 +73,7 @@ class AdminRoomEditView(PermissionMixin, UpdateView):
 class AdminRoomDeleteView(PermissionMixin, DeleteView):
     model = Room
     template_name = 'admin_panel/delete_room.html'
-    success_url = reverse_lazy('admin_rooms')
+    success_url = reverse_lazy('admin_panel:admin_rooms')
     context_object_name = 'room'
     required_section = 'room_setup'
     model_permission_type = 'delete'

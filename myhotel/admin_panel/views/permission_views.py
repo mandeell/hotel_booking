@@ -11,7 +11,7 @@ import json
 
 from hotel.models import Permission, Role, UserRole, Hotel, Room, RoomType, RoomAmenity, HotelAmenity, Booking, Guest, ContactForm
 from django.contrib.auth.models import User
-from ..permission_decorators import require_permission, has_permission
+from ..permission_decorators import require_permission, has_permission, require_superuser
 
 
 @login_required
@@ -61,30 +61,68 @@ def admin_permissions(request):
 
 
 @login_required
+@require_superuser
 def admin_permission_create(request):
     """Create a new permission"""
     if request.method == 'POST':
         name = request.POST.get('name')
         codename = request.POST.get('codename')
-        content_type_id = request.POST.get('content_type')
-        permission_type = request.POST.get('permission_type')
+        permission_category = request.POST.get('permission_category')
         description = request.POST.get('description', '')
         
         try:
-            content_type = ContentType.objects.get(id=content_type_id)
+            if permission_category == 'model':
+                # Handle model permission creation
+                content_type_id = request.POST.get('content_type')
+                permission_type = request.POST.get('permission_type')
+                
+                if not content_type_id or not permission_type:
+                    messages.error(request, 'Content type and permission type are required for model permissions.')
+                    return redirect('admin_permission_create')
+                
+                content_type = ContentType.objects.get(id=content_type_id)
+                
+                # Check if permission already exists
+                if Permission.objects.filter(content_type=content_type, permission_type=permission_type).exists():
+                    messages.error(request, f'Permission "{permission_type}" for "{content_type.model}" already exists.')
+                    return redirect('admin_permissions')
+                
+                permission = Permission.objects.create(
+                    name=name,
+                    codename=codename,
+                    content_type=content_type,
+                    permission_type=permission_type,
+                    description=description
+                )
             
-            # Check if permission already exists
-            if Permission.objects.filter(content_type=content_type, permission_type=permission_type).exists():
-                messages.error(request, f'Permission "{permission_type}" for "{content_type.model}" already exists.')
-                return redirect('admin_permissions')
+            elif permission_category == 'section_access':
+                # Handle section access permission creation
+                section_name = request.POST.get('section_name')
+                
+                if not section_name:
+                    messages.error(request, 'Section name is required for section access permissions.')
+                    return redirect('admin_permission_create')
+                
+                # Get a generic content type for section access permissions
+                # Using ContentType for Permission model as a convention
+                content_type = ContentType.objects.get_for_model(Permission)
+                
+                # Check if permission already exists
+                if Permission.objects.filter(codename=codename).exists():
+                    messages.error(request, f'Permission with codename "{codename}" already exists.')
+                    return redirect('admin_permissions')
+                
+                permission = Permission.objects.create(
+                    name=name,
+                    codename=codename,
+                    content_type=content_type,  # Using Permission content type as a convention
+                    permission_type='view',     # Using 'view' as a convention for section access
+                    description=description
+                )
             
-            permission = Permission.objects.create(
-                name=name,
-                codename=codename,
-                content_type=content_type,
-                permission_type=permission_type,
-                description=description
-            )
+            else:
+                messages.error(request, 'Invalid permission category.')
+                return redirect('admin_permission_create')
             
             messages.success(request, f'Permission "{permission.name}" created successfully.')
             return redirect('admin_permissions')
@@ -108,6 +146,7 @@ def admin_permission_create(request):
 
 
 @login_required
+@require_superuser
 def admin_permission_edit(request, permission_id):
     """Edit an existing permission"""
     permission = get_object_or_404(Permission, id=permission_id)
@@ -134,6 +173,7 @@ def admin_permission_edit(request, permission_id):
 
 
 @login_required
+@require_superuser
 def admin_permission_delete(request, permission_id):
     """Delete a permission"""
     permission = get_object_or_404(Permission, id=permission_id)
@@ -204,6 +244,7 @@ def admin_roles(request):
 
 
 @login_required
+@require_superuser
 def admin_role_create(request):
     """Create a new role"""
     if request.method == 'POST':
@@ -233,8 +274,13 @@ def admin_role_create(request):
     # Get all permissions grouped by content type
     permissions = Permission.objects.select_related('content_type').order_by('content_type__model', 'permission_type')
     
+    # Separate section access permissions for better organization
+    section_access_permissions = Permission.objects.filter(codename__startswith='access_')
+    regular_permissions = permissions.exclude(id__in=section_access_permissions.values_list('id', flat=True))
+    
     context = {
-        'permissions': permissions,
+        'permissions': regular_permissions,
+        'section_access_permissions': section_access_permissions,
         'page_title': 'Create Role',
         'breadcrumb_parent': 'Account',
     }
@@ -243,6 +289,7 @@ def admin_role_create(request):
 
 
 @login_required
+@require_superuser
 def admin_role_edit(request, role_id):
     """Edit an existing role"""
     role = get_object_or_404(Role, id=role_id)
@@ -264,7 +311,7 @@ def admin_role_edit(request, role_id):
                 role.permissions.clear()
             
             messages.success(request, f'Role "{role.name}" updated successfully.')
-            return redirect('admin_roles')
+            return redirect('admin_panel:admin_roles')
         except Exception as e:
             messages.error(request, f'Error updating role: {str(e)}')
     
@@ -272,9 +319,14 @@ def admin_role_edit(request, role_id):
     permissions = Permission.objects.select_related('content_type').order_by('content_type__model', 'permission_type')
     role_permission_ids = list(role.permissions.values_list('id', flat=True))
     
+    # Separate section access permissions for better organization
+    section_access_permissions = Permission.objects.filter(codename__startswith='access_')
+    regular_permissions = permissions.exclude(id__in=section_access_permissions.values_list('id', flat=True))
+    
     context = {
         'role': role,
-        'permissions': permissions,
+        'permissions': regular_permissions,
+        'section_access_permissions': section_access_permissions,
         'role_permission_ids': role_permission_ids,
         'page_title': 'Edit Role',
         'breadcrumb_parent': 'Account',
@@ -284,6 +336,7 @@ def admin_role_edit(request, role_id):
 
 
 @login_required
+@require_superuser
 def admin_role_delete(request, role_id):
     """Delete a role"""
     role = get_object_or_404(Role, id=role_id)

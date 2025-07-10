@@ -16,7 +16,7 @@ class AdminRoomAmenityCreateView(PermissionMixin, CreateView):
     model = RoomAmenity
     form_class = RoomAmenityForm
     template_name = 'admin_panel/add_room_amenity.html'
-    success_url = reverse_lazy('admin_room_amenities')
+    success_url = reverse_lazy('admin_panel:admin_room_amenities')
     required_section = 'room_amenities'
     model_permission_type = 'add'
     redirect_url = 'admin_panel:dashboard'
@@ -25,7 +25,7 @@ class AdminRoomAmenityEditView(PermissionMixin, UpdateView):
     model = RoomAmenity
     form_class = RoomAmenityForm
     template_name = 'admin_panel/edit_room_amenity.html'
-    success_url = reverse_lazy('admin_room_amenities')
+    success_url = reverse_lazy('admin_panel:admin_room_amenities')
     context_object_name = 'amenity'
     required_section = 'room_amenities'
     model_permission_type = 'edit'
@@ -34,7 +34,7 @@ class AdminRoomAmenityEditView(PermissionMixin, UpdateView):
 class AdminRoomAmenityDeleteView(PermissionMixin, DeleteView):
     model = RoomAmenity
     template_name = 'admin_panel/delete_room_amenity.html'
-    success_url = reverse_lazy('admin_room_amenities')
+    success_url = reverse_lazy('admin_panel:admin_room_amenities')
     context_object_name = 'amenity'
     required_section = 'room_amenities'
     model_permission_type = 'delete'
