@@ -20,7 +20,6 @@ A comprehensive, full-featured hotel booking and management system built with Dj
 - [Security Features](#-security-features)
 - [Mobile Responsiveness](#-mobile-responsiveness)
 - [Contributing](#-contributing)
-- [License](#-license)
 
 ## ✨ Features
 
