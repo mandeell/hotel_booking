@@ -4,7 +4,6 @@ A comprehensive, full-featured hotel booking and management system built with Dj
 
 ![Django](https://img.shields.io/badge/Django-5.2.4-green.svg)
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)
 
 ## 📋 Table of Contents
@@ -501,9 +500,6 @@ We welcome contributions to improve the Hotel Booking Management System!
 - Follow Django best practices
 - Maintain consistent indentation (4 spaces)
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 📞 Support
 
