@@ -78,6 +78,8 @@ class Command(BaseCommand):
             ('access_guest', 'Can access guest section', 'Access to guest management'),
             ('access_room_setup', 'Can access room setup section', 'Access to room setup and management'),
             ('access_hotel_setup', 'Can access hotel setup section', 'Access to hotel setup and management'),
+            ('access_room_amenities', 'Can access room amenities section', 'Access to room amenities management'),
+            ('access_hotel_amenities', 'Can access hotel amenities section', 'Access to hotel amenities management'),
             ('access_contact', 'Can access contact section', 'Access to contact form management'),
             ('access_account', 'Can access account section', 'Access to account and permission management'),
         ]

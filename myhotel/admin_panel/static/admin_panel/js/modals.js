@@ -206,6 +206,31 @@ class ModalManager {
         this.showModal('roleRemoveModal');
     }
 
+    // Show logout confirmation modal
+    showLogoutModal(onConfirm) {
+        const modal = document.getElementById('logoutModal');
+        const confirmBtn = document.getElementById('logoutConfirm');
+        const cancelBtn = document.getElementById('logoutCancel');
+
+        // Remove existing event listeners
+        const newConfirmBtn = confirmBtn.cloneNode(true);
+        const newCancelBtn = cancelBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+        // Add new event listeners
+        newConfirmBtn.addEventListener('click', () => {
+            this.hideModal('logoutModal');
+            if (onConfirm) onConfirm();
+        });
+
+        newCancelBtn.addEventListener('click', () => {
+            this.hideModal('logoutModal');
+        });
+
+        this.showModal('logoutModal');
+    }
+
     // Generic show modal
     showModal(modalId) {
         const modal = document.getElementById(modalId);
@@ -226,7 +251,7 @@ class ModalManager {
 
     // Hide all modals
     hideAllModals() {
-        const modals = ['confirmationModal', 'successModal', 'errorModal', 'warningModal', 'infoModal', 'userStatusModal', 'roleRemoveModal'];
+        const modals = ['confirmationModal', 'successModal', 'errorModal', 'warningModal', 'infoModal', 'userStatusModal', 'roleRemoveModal', 'logoutModal'];
         modals.forEach(modalId => this.hideModal(modalId));
     }
 
@@ -455,5 +480,14 @@ function showUserStatusModal(username, isActive, onConfirm) {
 function showRoleRemoveModal(username, roleName, onConfirm) {
     if (window.modalManager) {
         window.modalManager.showRoleRemoveModal(username, roleName, onConfirm);
+    }
+}
+
+function showLogoutConfirmation() {
+    if (window.modalManager) {
+        window.modalManager.showLogoutModal(function() {
+            // Redirect to logout URL
+            window.location.href = '/admin/logout/';
+        });
     }
 }

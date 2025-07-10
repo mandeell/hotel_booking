@@ -94,13 +94,14 @@
                             Active - User can login and access the system
                         </label>
                     </div>
-                    
+                    {% if request.user.is_superuser %}
                     <div class="flex items-center">
                         {{ form.is_staff }}
                         <label for="{{ form.is_staff.id_for_label }}" class="ml-2 text-sm text-gray-700">
                             Staff - User can access Django admin interface
                         </label>
                     </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -112,9 +113,8 @@
                 
                 <div class="space-y-2">
                     {{ form.roles }}
-                    {% if form.roles.help_text %}
                         <p class="text-sm text-gray-500">{{ form.roles.help_text }}</p>
-                    {% endif %}
+
                     {% if form.roles.errors %}
                         <div class="text-sm text-red-600">
                             {{ form.roles.errors.0 }}

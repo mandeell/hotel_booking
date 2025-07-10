@@ -44,7 +44,7 @@
                 <i class="fas fa-chevron-down dropdown-arrow sidebar-item-text text-gray-400 group-hover:text-blue-600 transition-all text-xs"></i>
             </button>
             <div class="dropdown-menu ml-6 mt-1 space-y-1" id="room-setup-menu">
-                {% if request.user|has_perm:"view_roomtype" %}
+                {% if request.user|has_section_access_filter:"room_types" %}
                 <a href="{% url 'admin_panel:admin_room_types' %}" class="sidebar-item group flex items-center gap-3 px-3 py-2 rounded-lg text-gray-500 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200">
                     <i class="fas fa-th-list text-xs text-gray-400 group-hover:text-blue-600 transition-colors"></i>
                     <span class="sidebar-item-text text-sm">Room Types</span>
