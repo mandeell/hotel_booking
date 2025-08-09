@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+
+import dj_database_url
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -13,8 +15,7 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = True
 
 # ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.pythonanywhere.com']
-ALLOWED_HOSTS = ['ed31ad97c3f0.ngrok-free.app', '127.0.0.1']
-CSRF_TRUSTED_ORIGINS = ['https://ed31ad97c3f0.ngrok-free.app']
+ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
 
 
 # Application definition
@@ -72,11 +73,9 @@ WSGI_APPLICATION = 'myhotel.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(default=config('DATABASE_URL'))
 }
+
 
 
 # Password validation
