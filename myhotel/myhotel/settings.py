@@ -149,7 +149,7 @@ STATICFILES_DIRS = [
     BASE_DIR / 'hotel/static',
     BASE_DIR / 'admin_panel/static',
 ]
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # for production
+# STATIC_ROOT = BASE_DIR / 'staticfiles'  # for production
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
