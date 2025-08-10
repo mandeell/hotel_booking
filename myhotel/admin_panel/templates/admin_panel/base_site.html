@@ -1,5 +1,6 @@
 {% load static %}
 {% load permission_tags %}
+{% load media_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -63,7 +64,7 @@
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm">
                     {% if hotel.hotel_logo %}
-                        <img class="h-8 w-8 rounded-md object-cover" src="{{ hotel.hotel_logo.url }}" alt="Logo">
+                        <img class="h-8 w-8 rounded-md object-cover" src="{% media_with_version hotel.hotel_logo.name %}" alt="Logo">
                     {% else %}
                         <i class="fas fa-hotel text-blue-600 text-lg"></i>
                     {% endif %}
@@ -199,7 +200,7 @@
                     <div class="flex items-center gap-2">
                         <div class="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
                             {% if hotel.hotel_logo %}
-                                <img class="h-4 w-4 rounded object-cover" src="{{ hotel.hotel_logo.url }}" alt="Logo">
+                                <img class="h-4 w-4 rounded object-cover" src="{% media_with_version hotel.hotel_logo.name %}" alt="Logo">
                             {% else %}
                                 <i class="fas fa-hotel text-white text-xs"></i>
                             {% endif %}
