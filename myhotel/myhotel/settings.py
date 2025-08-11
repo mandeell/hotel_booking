@@ -161,6 +161,34 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = True
 
+# Media optimization settings
+MEDIA_OPTIMIZATION = {
+    'ENABLE_COMPRESSION': True,
+    'ENABLE_WEBP': True,
+    'IMAGE_QUALITY': 85,
+    'MAX_IMAGE_WIDTH': 1920,
+    'MAX_IMAGE_HEIGHT': 1080,
+    'THUMBNAIL_SIZE': (300, 300),
+    'LAZY_LOADING': True,
+}
+
+# Cache settings for better performance
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+        }
+    }
+}
+
+# Session optimization
+SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_SAVE_EVERY_REQUEST = False
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Authentication URLs

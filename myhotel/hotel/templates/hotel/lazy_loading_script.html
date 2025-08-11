@@ -1,0 +1,122 @@
+<script>
+// Lazy loading for background images and enhanced image loading
+document.addEventListener('DOMContentLoaded', function() {
+    // Intersection Observer for lazy loading background images
+    if ('IntersectionObserver' in window) {
+        const bgImageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const bgImage = entry.target;
+                    const imageUrl = bgImage.dataset.bg;
+                    if (imageUrl) {
+                        // Preload the image
+                        const img = new Image();
+                        img.onload = () => {
+                            bgImage.style.backgroundImage = `url('${imageUrl}')`;
+                            bgImage.classList.add('loaded');
+                        };
+                        img.src = imageUrl;
+                    }
+                    observer.unobserve(bgImage);
+                }
+            });
+        }, {
+            rootMargin: '50px 0px',
+            threshold: 0.01
+        });
+
+        // Observe all elements with data-bg attribute
+        document.querySelectorAll('[data-bg]').forEach(bg => {
+            bgImageObserver.observe(bg);
+        });
+    }
+
+    // Enhanced lazy loading for images with data-src
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const imageUrl = img.dataset.src;
+                    if (imageUrl) {
+                        img.src = imageUrl;
+                        img.classList.add('loaded');
+                        img.onload = () => {
+                            img.classList.add('fade-in');
+                        };
+                    }
+                    observer.unobserve(img);
+                }
+            });
+        }, {
+            rootMargin: '50px 0px',
+            threshold: 0.01
+        });
+
+        // Observe all images with data-src attribute
+        document.querySelectorAll('img[data-src]').forEach(img => {
+            imageObserver.observe(img);
+        });
+    }
+
+    // Fallback for browsers without IntersectionObserver
+    else {
+        document.querySelectorAll('[data-bg]').forEach(bg => {
+            const imageUrl = bg.dataset.bg;
+            if (imageUrl) {
+                bg.style.backgroundImage = `url('${imageUrl}')`;
+            }
+        });
+
+        document.querySelectorAll('img[data-src]').forEach(img => {
+            const imageUrl = img.dataset.src;
+            if (imageUrl) {
+                img.src = imageUrl;
+            }
+        });
+    }
+});
+
+// CSS for smooth transitions
+const style = document.createElement('style');
+style.textContent = `
+    [data-bg] {
+        transition: opacity 0.3s ease-in-out;
+    }
+    
+    [data-bg].loaded {
+        opacity: 1;
+    }
+    
+    img[data-src] {
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+    }
+    
+    img[data-src].loaded {
+        opacity: 1;
+    }
+    
+    img.fade-in {
+        opacity: 1 !important;
+    }
+    
+    /* Placeholder styles */
+    .image-placeholder {
+        background-color: #f0f0f0;
+        background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
+                          linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
+                          linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
+                          linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+        background-size: 20px 20px;
+        background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        animation: placeholder-shimmer 2s infinite linear;
+    }
+    
+    @keyframes placeholder-shimmer {
+        0% { background-position: 0 0, 0 10px, 10px -10px, -10px 0px; }
+        100% { background-position: 20px 20px, 20px 30px, 30px 10px, 10px 20px; }
+    }
+`;
+document.head.appendChild(style);
+</script>
