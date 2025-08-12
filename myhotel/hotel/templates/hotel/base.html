@@ -19,7 +19,7 @@
         <a class="navbar-brand" href="#">
           <span class="brand-text text-light">
             {% if hotel.hotel_logo %}
-              <img src="{{ hotel.hotel_logo.url }}" alt="{{ hotel.name }} Logo" class="img-fluid me-2" style="max-height: 40px;" />
+              <img src="{{ hotel.hotel_logo.url }}" alt="" class="img-fluid me-2" style="max-height: 40px;" />
             {% endif %}
             {{ hotel.name }}
           </span>
@@ -51,7 +51,7 @@
           <div class="col-md-6">
             <h5>
               {% if hotel.hotel_logo %}
-                <img src="{{ hotel.hotel_logo.url }}" alt="{{ hotel.name }} Logo" height="24" class="me-2">
+                <img src="{{ hotel.hotel_logo.url }}" alt="" height="24" class="me-2">
               {% else %}
                 <i class="fas fa-crown me-2"></i>
               {% endif %}
