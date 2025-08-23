@@ -4,11 +4,12 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from .soft_delete import SoftDeleteModel
+from cloudinary.models import CloudinaryField
 
 class UserProfile(models.Model):
     """Extended user profile with additional fields"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    profile_picture = CloudinaryField('image', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -25,7 +26,7 @@ class Hotel(SoftDeleteModel):
     contact_email = models.EmailField()
     contact_phone = models.CharField(max_length=15)
     description = models.TextField(blank=True)
-    hotel_logo = models.ImageField(upload_to='hotel/', blank=True, null=True)
+    hotel_logo = CloudinaryField('image', blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -52,7 +53,7 @@ class RoomType(SoftDeleteModel):
     display_price = models.CharField(max_length=300, null=True, blank=True)
     capacity = models.PositiveIntegerField()
     amenities = models.ManyToManyField(RoomAmenity)
-    image = models.ImageField(upload_to='rooms/', blank=True, null=True)
+    image = CloudinaryField('image', blank=True, null=True)
 
     def clean(self):
         # Skip validation for unsaved instances
