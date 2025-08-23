@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-
+import cloudinary
 import dj_database_url
 from decouple import config
 
@@ -16,11 +16,19 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
 
+cloudinary.config(
+    cloud_name=config('CLOUD_NAME'),
+    api_key=config('API_KEY'),
+    api_secret=config('API_SECRET')
+)
+
 
 # Application definition
 
 INSTALLED_APPS = [
     'hotel.apps.HotelConfig',
+    'cloudinary',
+    'cloudinary_storage',
     'admin_panel.apps.AdminPanelConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -30,10 +38,18 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('CLOUD_NAME'),
+    'API_KEY': config('API_KEY'),
+    'API_SECRET': config('API_SECRET'),
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'myhotel.middleware.MediaFilesMiddleware',  # Custom middleware for media files
+    # 'myhotel.middleware.MediaFilesMiddleware',  # Custom middleware for media files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
