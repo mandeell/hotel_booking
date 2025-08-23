@@ -78,7 +78,7 @@ def user_manager_list(request):
 def user_manager_create(request):
     """Create a new user"""
     if request.method == 'POST':
-        form = AdminUserRegistrationForm(request.POST)
+        form = AdminUserRegistrationForm(request.POST, request.FILES)
         if form.is_valid():
             form.assigned_by = request.user
             user = form.save()
@@ -124,12 +124,12 @@ def user_manager_edit(request, user_id):
     """Edit an existing user"""
     user = get_object_or_404(User, id=user_id)
 
-    if user.is_superuser:
+    if not user.is_superuser:
         messages.error(request, 'Cannot edit superuser accounts.')
         return redirect('admin_panel:user_manager_list')
     
     if request.method == 'POST':
-        form = AdminUserEditForm(request.POST, instance=user)
+        form = AdminUserEditForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             form.assigned_by = request.user
             form.save()
