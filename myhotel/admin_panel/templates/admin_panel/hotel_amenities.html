@@ -15,7 +15,7 @@
                 <tr>
                     <th class="px-2 md:px-4 py-2 text-left text-xs font-semibold text-blue-700 uppercase whitespace-nowrap">ID</th>
                     <th class="px-2 md:px-4 py-2 text-left text-xs font-semibold text-blue-700 uppercase whitespace-nowrap">Name</th>
-                    <th class="px-2 md:px-4 py-2 text-left text-xs font-semibold text-blue-700 uppercase whitespace-nowrap">Description</th>
+                    <th class="px-2 md:px-4 py-2 text-left text-xs font-semibold text-blue-700 uppercase whitespace-nowrap">Icon Name</th>
                     {% if request.user|has_perm:"delete_hotelamenity" or request.user|has_perm:"edit_hotelamenity" %}
                     <th class="px-2 md:px-4 py-2 text-left text-xs font-semibold text-blue-700 uppercase whitespace-nowrap">Actions</th>
                     {% endif %}
@@ -26,7 +26,7 @@
                 <tr>
                     <td class="px-2 md:px-4 py-2 whitespace-nowrap">{{ amenity.id }}</td>
                     <td class="px-2 md:px-4 py-2 whitespace-nowrap">{{ amenity.name }}</td>
-                    <td class="px-2 md:px-4 py-2 whitespace-nowrap">{{ amenity.description }}</td>
+                    <td class="px-2 md:px-4 py-2 whitespace-nowrap">{{ amenity.icon_name }}</td>
                     <td class="px-2 md:px-4 py-2 whitespace-nowrap">
                         <div class="flex flex-col lg:flex-row gap-1 lg:gap-2">
                             {% if request.user|has_perm:"edit_hotelamenity" %}
