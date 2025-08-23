@@ -13,6 +13,16 @@ class AdminUserRegistrationForm(UserCreationForm):
             'placeholder': 'Enter email address'
         })
     )
+
+    profile_picture = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'accept': 'image/*'
+        }),
+        help_text='Upload a profile picture'
+    )
+
     first_name = forms.CharField(
         max_length=30,
         required=True,
@@ -84,6 +94,11 @@ class AdminUserRegistrationForm(UserCreationForm):
         
         if commit:
             user.save()
+            profile, created = UserProfile.objects.get_or_create(user=user)
+            if self.cleaned_data.get('profile_picture'):
+                profile.profile_picture = self.cleaned_data['profile_picture']
+                profile.save()
+
             # Assign roles
             roles = self.cleaned_data['roles']
             if roles:
@@ -106,6 +121,15 @@ class AdminUserEditForm(forms.ModelForm):
             'class': 'space-y-2'
         }),
         help_text='Select roles to assign to this user'
+    )
+
+    profile_picture = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'accept': 'image/*'
+        }),
+        help_text='Upload a profile picture'
     )
 
     class Meta:
@@ -143,10 +167,16 @@ class AdminUserEditForm(forms.ModelForm):
             from hotel.models import UserRole
             current_roles = UserRole.objects.filter(user=self.instance).values_list('role', flat=True)
             self.fields['roles'].initial = current_roles
+            # self.fields['profile_picture'].initial = self.instance.profile_picture
 
     def save(self, commit=True):
         user = super().save(commit)
         if commit:
+
+            profile, created = UserProfile.objects.get_or_create(user=user)
+            if self.cleaned_data.get('profile_picture'):
+                profile.profile_picture = self.cleaned_data['profile_picture']
+                profile.save()
             # Update roles
             from hotel.models import UserRole
             # Remove existing roles
