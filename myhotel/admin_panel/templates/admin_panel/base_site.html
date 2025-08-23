@@ -64,7 +64,7 @@
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm">
                     {% if hotel.hotel_logo %}
-                        <img class="h-8 w-8 rounded-md object-cover" src="{% media_with_version hotel.hotel_logo.name %}" alt="Logo">
+                        <img class="h-8 w-8 rounded-md object-cover" src="{{ hotel.hotel_logo.url }}" alt="Logo">
                     {% else %}
                         <i class="fas fa-hotel text-blue-600 text-lg"></i>
                     {% endif %}
